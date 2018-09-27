@@ -1,0 +1,34 @@
+#hwy table{ background-color: lightgray; }
+#hwy td, tfoot, thead {
+    padding-left: 2px; 
+    padding-right: 2px; 
+    min-width: 60px; 
+    width:60px;
+    text-align: center;
+    font-size:x-small;
+    padding:0px;
+}
+table {
+    table-layout: fixed;
+    text-align: center;
+    width: 600px;
+    background-color: lightgray;
+    border-collapse: collapse;
+    font-size:x-small;
+}
+.hwy-tile{
+    width:60px;
+    text-align: center;
+}
+td{white-space: nowrap; text-align: center; width:80px; line-height: 8px;}
+
+.safe{background-color: lightgreen;}
+.unsafe, .gameOver{background-color: lightcoral;}
+.crashed{background-color: red !important;}
+.mph{font-size: 24px; font-weight: bold;}
+th{text-align: center;}
+.alert{ font-weight: bold;}
+.hero{font-weight: normal; font-family: Arial, Helvetica, sans-serif; font-size: 14px;}
+div #gameButtons {float: right; width:600px;}
+div #hero {float: right; width:300px;}
+.left{text-align: left;}

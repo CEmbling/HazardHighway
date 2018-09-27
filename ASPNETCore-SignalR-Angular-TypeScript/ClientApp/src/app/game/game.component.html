@@ -1,0 +1,137 @@
+<div id="gameButtons">
+  <h1>Hazard Highway - the Game!</h1>
+  <button name="opengame" class="btn btn-primary" (click)="openGameClicked()" [disabled]="gameStatus == 'open'">Start Game</button>
+  <button name="" class="btn btn-danger" (click)="closeGameClicked()" [disabled]="gameStatus == 'closed' || gameStatus == ''">Stop Game</button>
+  <button name="" class="btn btn-default" (click)="resetClicked()"  [disabled]="!gameStatus == 'closed'">Reset</button>
+  <button name="" class="btn btn-default" (click)="toggleAdaptiveCruise()">Cruise Control</button>&nbsp;
+   Vehicle Count : {{vehicles.length}} Game Status : {{gameStatus}} Points: {{player1Vehicle.points}} Game Loop: {{gameLoopInMilliseconds}}
+</div>
+
+<div id="hero" class="hero">
+    Hazard Highway is full of bad drivers who need your help!!
+    Swerve in front of the inattentive drivers to enable their safety features. 
+    Can you save them before they cause a huge pileup? Press Start and use your keyboard's arrow keys to control your car!!
+</div>
+
+<div style="clear:both;"></div>
+
+<div *ngIf="gameStatus == 'open'" class="">
+    &nbsp;
+</div>
+<div *ngIf="gameStatus == 'closed'" class="gameOver">
+    {{alert}}. Play again, there are more bad drivers on Hazard Highway that need your help!!! Press <b>Reset</b> above.
+</div>
+
+<div id="gameConsole">
+    <div id="scoreboard">
+        <h3>Scoreboard</h3>
+          <table class="table table-response table-bordered" style="width:400px;">
+            <thead>
+            <th item-width="80px">Name</th>
+            <th>Mph</th>
+            <th>X</th>
+            <th>Y</th>
+            <th>AC</th>
+            <th>Points</th>
+            </thead>
+            <tr *ngFor="let vehicle of vehicles">
+              <td class="left">{{vehicle.name}}</td>
+              <td>{{vehicle.mph}}</td>
+              <td [ngClass]="{'crashed': vehicle.drivingStatus == 'Crashed' }">{{vehicle.x}}</td>
+              <td>{{vehicle.y}}</td>
+              <td [ngClass]="{'safe': vehicle.adaptiveCruiseOn }"
+                  [ngClass]="{'unsafe': !vehicle.adaptiveCruiseOn }">
+                {{vehicle.adaptiveCruiseOn}}</td>
+              <td>{{vehicle.points}}</td>
+            </tr>
+          </table>
+          <h3>Driver Log</h3>
+          <table class="table table-response table-bordered" style="width:400px;">
+            <thead>
+            <th class="left">Name</th>
+            <th>Status</th>
+            <th>Notes</th>
+            </thead>
+            <tr *ngFor="let vehicle of vehicles">
+              <td class="left">{{vehicle.name}}</td>
+              <td [ngClass]="{'crashed': vehicle.drivingStatus == 'Crashed' }">{{vehicle.drivingStatus}}</td>
+              <td>{{vehicle.status}}</td>
+            </tr>
+          </table>
+    </div>
+      
+    <div id="highway">
+          <h3>Hazard Highway</h3>    
+          <div>
+            <table id="hwy" width="400px" class="table table-response table-bordered">
+                <thead>
+                    <th>1</th>
+                    <th>2</th>
+                    <th>3</th>
+                    <th>4</th>
+                    <th>5</th>
+                    <th>6</th>
+                    <th>7</th>
+                    <th>8</th>
+                </thead>
+              <thead>
+                  <th>Marker</th>
+                  <th [ngClass]="{'unsafe': otherVehiclesInLaneAheadOfPlayer1(2,'','Crashed') > 0 }">{{otherVehiclesInLaneAheadOfPlayer1(2,'','Crashed')}}</th>
+                  <th [ngClass]="{'unsafe': otherVehiclesInLaneAheadOfPlayer1(3,'','Crashed') > 0 }">{{otherVehiclesInLaneAheadOfPlayer1(3,'','Crashed')}}</th>
+                  <th [ngClass]="{'unsafe': otherVehiclesInLaneAheadOfPlayer1(4,'','Crashed') > 0 }">{{otherVehiclesInLaneAheadOfPlayer1(4,'','Crashed')}}</th>
+                  <th [ngClass]="{'unsafe': otherVehiclesInLaneAheadOfPlayer1(5,'','Crashed') > 0 }">{{otherVehiclesInLaneAheadOfPlayer1(5,'','Crashed')}}</th>
+                  <th [ngClass]="{'unsafe': otherVehiclesInLaneAheadOfPlayer1(6,'','Crashed') > 0 }">{{otherVehiclesInLaneAheadOfPlayer1(6,'','Crashed')}}</th>
+                  <th [ngClass]="{'unsafe': otherVehiclesInLaneAheadOfPlayer1(7,'','Crashed') > 0 }">{{otherVehiclesInLaneAheadOfPlayer1(7,'','Crashed')}}</th>
+                  <th class="right mph">{{player1Vehicle.mph}} MPH</th>
+              </thead>
+              <tr *ngFor="let row of this.highwayRows">
+                  <td id="{{row.Lane1.row}}_{{row.Lane1.lane}}" style="width:40px;">{{row.Lane1.marker}}</td>
+                  <td [ngClass]="{'safe': row.Lane2.displaySafe(),
+                                  'unsafe': row.Lane2.displayUnsafe(),
+                                  'crashed': row.Lane2.displayCrashed() }">{{row.Lane2.show()}}</td>
+                  <td [ngClass]="{'safe': row.Lane3.displaySafe(),
+                                  'unsafe': row.Lane3.displayUnsafe(),
+                                  'crashed': row.Lane3.displayCrashed() }">{{row.Lane3.show()}}</td>
+                  <td [ngClass]="{'safe': row.Lane4.displaySafe(),
+                                  'unsafe': row.Lane4.displayUnsafe(),
+                                  'crashed': row.Lane4.displayCrashed() }">{{row.Lane4.show()}}</td>
+                  <td [ngClass]="{'safe': row.Lane5.displaySafe(),
+                                  'unsafe': row.Lane5.displayUnsafe(),
+                                  'crashed': row.Lane5.displayCrashed() }">{{row.Lane5.show()}}</td>
+                  <td [ngClass]="{'safe': row.Lane6.displaySafe(),
+                                  'unsafe': row.Lane6.displayUnsafe(),
+                                  'crashed': row.Lane6.displayCrashed() }">{{row.Lane6.show()}}</td>
+                  <td [ngClass]="{'safe': row.Lane7.displaySafe(),
+                                  'unsafe': row.Lane7.displayUnsafe(),
+                                  'crashed': row.Lane7.displayCrashed() }">{{row.Lane7.show()}}</td>
+                  <td [ngClass]="{'safe': row.Lane8.displaySafe(),
+                                  'unsafe': row.Lane8.displayUnsafe(),
+                                  'crashed': row.Lane8.displayCrashed() }">{{row.Lane8.show()}}</td>
+                </tr>
+            <tfoot>
+                <th>1</th>
+                <th>2</th>
+                <th>3</th>
+                <th>4</th>
+                <th>5</th>
+                <th>6</th>
+                <th>7</th>
+                <th>8</th>
+            </tfoot>
+              <tfoot>
+                  <th>Marker</th>
+                  <th [ngClass]="{'unsafe': otherVehiclesInLaneBehindPlayer1(2,'','Crashed') > 0 }">{{otherVehiclesInLaneBehindPlayer1(2,'','Crashed')}}</th>
+                  <th [ngClass]="{'unsafe': otherVehiclesInLaneBehindPlayer1(3,'','Crashed') > 0 }">{{otherVehiclesInLaneBehindPlayer1(3,'','Crashed')}}</th>
+                  <th [ngClass]="{'unsafe': otherVehiclesInLaneBehindPlayer1(4,'','Crashed') > 0 }">{{otherVehiclesInLaneBehindPlayer1(4,'','Crashed')}}</th>
+                  <th [ngClass]="{'unsafe': otherVehiclesInLaneBehindPlayer1(5,'','Crashed') > 0 }">{{otherVehiclesInLaneBehindPlayer1(5,'','Crashed')}}</th>
+                  <th [ngClass]="{'unsafe': otherVehiclesInLaneBehindPlayer1(6,'','Crashed') > 0 }">{{otherVehiclesInLaneBehindPlayer1(6,'','Crashed')}}</th>
+                  <th [ngClass]="{'unsafe': otherVehiclesInLaneBehindPlayer1(7,'','Crashed') > 0 }">{{otherVehiclesInLaneBehindPlayer1(7,'','Crashed')}}</th>
+                  <th class="right mph">{{player1Vehicle.mph}} MPH</th>
+              </tfoot>
+            </table>
+          </div>
+    </div>
+      
+    <div style='clear: both;'></div>
+</div>
+
