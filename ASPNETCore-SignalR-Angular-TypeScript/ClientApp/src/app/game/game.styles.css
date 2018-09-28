@@ -1,3 +1,6 @@
+body, html {
+  background-color: #BCE1FF !important;
+}
 #hwy table{ background-color: lightgray; }
 #hwy td, tfoot, thead {
     padding-left: 2px; 
@@ -9,26 +12,32 @@
     padding:0px;
 }
 table {
-    table-layout: fixed;
-    text-align: center;
-    width: 600px;
-    background-color: lightgray;
-    border-collapse: collapse;
-    font-size:x-small;
+  table-layout: fixed;
+  text-align: center;
+  width: 600px;
+  background-color: lightgray;
+  border-collapse: collapse;
+  border: 10px solid black;
+  font-size: x-small;
 }
-.hwy-tile{
+th{text-align: center;}
+td .hwy-tile{
     width:60px;
     text-align: center;
 }
-td{white-space: nowrap; text-align: center; width:80px; line-height: 8px;}
+td {white-space: nowrap; text-align: center; width:80px; line-height: 8px;}
+
+.left{text-align: left;}
+.right{text-align: right;}
 
 .safe{background-color: lightgreen;}
 .unsafe, .gameOver{background-color: lightcoral;}
 .crashed{background-color: red !important;}
 .mph{font-size: 24px; font-weight: bold;}
-th{text-align: center;}
+
 .alert{ font-weight: bold;}
 .hero{font-weight: normal; font-family: Arial, Helvetica, sans-serif; font-size: 14px;}
 div #gameButtons {float: right; width:600px;}
 div #hero {float: right; width:300px;}
-.left{text-align: left;}
+div #scoreboard {float:left; width:400px; padding-left: 10px;}
+div #highway {float: left; width:500px; padding-left: 30px;}

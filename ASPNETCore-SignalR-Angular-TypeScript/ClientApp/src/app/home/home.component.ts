@@ -7,6 +7,7 @@ import { Tab } from '../Models/tab.model';
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
+  styleUrls: ['./../game/game.styles.css'],
 })
 
 export class HomeComponent {
