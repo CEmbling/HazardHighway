@@ -111,10 +111,10 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
 
             var vehicles = new List<Vehicle>
             {
-                // introduce hazards down the highway
-                new Vehicle { Name = "Gauker 1",            Mph = 0, X = 3170, Y = 3, AdaptiveCruiseOn = true },
+                // introduce hazards into the highway
+                new Vehicle { Name = "Gawker 1",            Mph = 0, X = 3170, Y = 3, AdaptiveCruiseOn = true },
                 new Vehicle { Name = "Disabled Vehicle",    Mph = 0, X = 3200, Y = 5, AdaptiveCruiseOn = true },
-                new Vehicle { Name = "Gauker 2",            Mph = 0, X = 3170, Y = 7, AdaptiveCruiseOn = true },
+                new Vehicle { Name = "Gawker 2",            Mph = 0, X = 3170, Y = 7, AdaptiveCruiseOn = true },
 
                 // left lane
                 new Vehicle { Name = "Toyota Prius",        Mph = 30, X = 5,  Y = 3, AdaptiveCruiseOn = false },
