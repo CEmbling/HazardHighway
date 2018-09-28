@@ -118,7 +118,12 @@ export class GameComponent {
     this.gameService.startStreaming().subscribe({
       next: (data) => {
         this.displayVehicle(data);
-        this.renderHwy();
+        if (data.name == "Player 1") {
+            this.gameService.getAllVehicles().then((data) => {
+              this.vehicles = data;
+              this.renderHwy();
+            });
+          }
         this.checkForGameEnding();
       },
       error: function (err) {

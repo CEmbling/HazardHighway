@@ -35,7 +35,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
             DrivingStatus.Accelerating.ToString(), DrivingStatus.Braking.ToString(),
             DrivingStatus.AutoBraking.ToString(), DrivingStatus.Resuming.ToString() };
         private readonly Subject<Vehicle> _subject = new Subject<Vehicle>();
-        private const int UPDATE_INTERVAL_MILLISECONDS = 250;
+        private const int UPDATE_INTERVAL_MILLISECONDS = 250; //250;
 		private readonly TimeSpan _updateInterval = TimeSpan.FromMilliseconds(UPDATE_INTERVAL_MILLISECONDS);
         private readonly Random _updateOrNotRandom = new Random();
 
@@ -52,17 +52,19 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
         private const double FEETPERCELL = 1;
         private const int MILLISECONDSPERHOUR = 3600000;
         private const int VEHICLECELLLENGTH = 5;
-        private const int RADARINDICATORRANGE = 10;
+        private const int RADARINDICATORRANGE = 10;  // will be multipled by vehicle's cellsTraveledPerInterval value
         // accelerating
         private const int VEHICLE_MPH_ACCELERATION_RATE = 5;
         // braking
-        private const int RADARBRAKERANGE = 8;
+        private const int RADARBRAKERANGE = 8; // will be multipled by vehicle's cellsTraveledPerInterval value
         private const int POINTSPERVEHICLESAVED = 1000;
         private const int DANGEROUSESPEEDDIFF = 50;
         private const int CAUTIONSPEEDDIFF = 35;
         private const int VEHICLE_MAX_MPH_BRAKE_RATE = 20;
         private const int VEHICLE_CAUTIOUS_MPH_BRAKE_RATE = 10;
         private const int VEHICLE_GRADUAL_MPH_BRAKE_RATE = 5;
+        // saving
+        private const int RADARINDICATORRANGETOSAVE = 8;
 
         #endregion
 
@@ -172,8 +174,21 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                 {
                     _updatingVehiclePositions = true;
 
+                    // first update player1; it has the biggest impact on the screen render
                     foreach (var vehicle in _vehicles.Values
-                        .Where(v => v.DrivingStatus != DrivingStatus.Crashed.ToString()))
+                        .Where(v => v.DrivingStatus != DrivingStatus.Crashed.ToString()
+                            && v.Name == PLAYER1))
+                    {
+                        if (TryUpdateVehiclePosition(vehicle))
+                        {
+                            if (allowSubjectNextInsideGameLoop) _subject.OnNext(vehicle);
+                        }
+                    }
+
+                    // update everyone else
+                    foreach (var vehicle in _vehicles.Values
+                        .Where(v => v.DrivingStatus != DrivingStatus.Crashed.ToString()
+                            && v.Name != PLAYER1))
                     {
                         if (TryUpdateVehiclePosition(vehicle))
                         {
@@ -340,47 +355,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
             {
                 return false;
             }
-            // Randomly choose whether to udpate this Vehicle or not
-            //var r = _updateOrNotRandom.NextDouble();
-            //if (r > 0.1)
-            //{
-            //	return false;
-            //}
-
-            //// Update the Vehicle position by a random factor of the range percent
-            //var random = new Random((int)Math.Floor(Vehicle.X));
-            //var percentChange = random.NextDouble() * _rangePercent;
-            //var pos = random.NextDouble() > 0.51;
-            //var change = Math.Round(Vehicle.Price * (decimal)percentChange, 2);
-            //change = pos ? change : -change;
-
-            // 158,400 = 30 mph * 5280 ftpm
-            // 184,000 = 35 mph * 5280 ftpm
-            var ftphr = vehicle.Mph * FEETPERMILE;
-
-            // .044 = feet per millisecond  (30 mph)
-            // .051 = feet per millisecond  (35 mph)
-            Double ftpms = Convert.ToDouble(Convert.ToDouble(ftphr) / Convert.ToDouble(MILLISECONDSPERHOUR));
-            
-            // 11 = feetTraveledPerInterval  (30 mph)
-            // 12.75 = feetTraveledPerInterval  (35 mph)
-            Double feetTraveledPerInterval = Convert.ToDouble(ftpms * _updateInterval.TotalMilliseconds);
-
-            // 0        = cellsTravelledPerInterval  (00 mph)
-            // 6.375    = cellsTravelledPerInterval  (05 mph)
-            // 5.5      = cellsTravelledPerInterval  (10 mph)
-            // 6.375    = cellsTravelledPerInterval  (15 mph)
-            // 5.5      = cellsTravelledPerInterval  (20 mph)
-            // 6.375    = cellsTravelledPerInterval  (25 mph)
-            // 5.5      = cellsTravelledPerInterval  (30 mph)
-            // 6.375    = cellsTravelledPerInterval  (35 mph)
-            // 5.5      = cellsTravelledPerInterval  (40 mph)
-            // 6.375    = cellsTravelledPerInterval  (45 mph)
-            // 5.5      = cellsTravelledPerInterval  (50 mph)
-            // 6.375    = cellsTravelledPerInterval  (55 mph)
-            // 5.5      = cellsTravelledPerInterval  (60 mph)
-            // 6.375    = cellsTravelledPerInterval  (75 mph)
-            int cellsTravelledPerInterval = Convert.ToInt32(feetTraveledPerInterval / FEETPERCELL);
+            int cellsTravelledPerInterval = CalculateCellsTravelledPerInterval(vehicle.Mph, this._updateInterval.TotalMilliseconds);
             vehicle.X += cellsTravelledPerInterval;
 
             return true;
@@ -679,7 +654,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
             var carsInRadarRange = await this._vehicles
                 .Where(otherVehicle => otherVehicle.Key != vehicle.Name
                     && otherVehicle.Value.Y == vehicle.Y                                                // in same lane
-                    && otherVehicle.Value.RearBumper <= vehicle.FrontBumper + RADARINDICATORRANGE       // within radar range
+                    && otherVehicle.Value.RearBumper <= vehicle.FrontBumper + (RADARINDICATORRANGE * CalculateCellsTravelledPerInterval(vehicle.Mph, this._updateInterval.TotalMilliseconds))      // within radar range
                     && otherVehicle.Value.RearBumper > vehicle.FrontBumper                              // within radar range
                 ).ToAsyncEnumerable().ToList();
 
@@ -694,7 +669,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                 {
                     // we may need to decrease speed...check distance first
                     // calculate breaking force
-                    var brakeForce = CalculateVehicleBrakingForceToMaintainLeadPreference(vehicle, nearestCar);
+                    var brakeForce = CalculateVehicleBrakingForceToMaintainLeadPreference(vehicle, nearestCar, this._updateInterval.TotalMilliseconds);
                     if (brakeForce > 0)
                     {
                         // breaking is necessary
@@ -802,7 +777,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
         }
         private async Task CheckVehicleForUnsafeVehiclesToSave(Vehicle vehicle)
         {
-            int radarRange = RADARINDICATORRANGE; // cells
+            int radarRange = RADARINDICATORRANGETOSAVE; // cells
             object _lock = new object();
             if (!vehicle.AdaptiveCruiseOn)
             {
@@ -835,19 +810,58 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
 
         #endregion
 
-        private static int CalculateVehicleBrakingForceToMaintainLeadPreference(Vehicle vehicle, Vehicle leadingCar)
+        private static int CalculateCellsTravelledPerInterval(int mph, double updateIntervalTotalMilliseconds)
+        {
+            if(mph <= 0)
+            {
+                return 0;
+            }
+            // 158,400 = 30 mph * 5280 ftpm
+            // 184,000 = 35 mph * 5280 ftpm
+            // 316,800 = 60 mph * 5280 ftpm
+            var ftphr = mph * FEETPERMILE;
+
+            // .044 = feet per millisecond  (30 mph)
+            // .051 = feet per millisecond  (35 mph)
+            // .088 = feet per millisecond  (60 mph)
+            Double ftpms = Convert.ToDouble(Convert.ToDouble(ftphr) / Convert.ToDouble(MILLISECONDSPERHOUR));
+
+            // 11 = feetTraveledPerInterval  (30 mph)
+            // 12.75 = feetTraveledPerInterval  (35 mph)
+            // 22 = feetTraveledPerInterval  (60 mph)
+            Double feetTraveledPerInterval = Convert.ToDouble(ftpms * updateIntervalTotalMilliseconds);
+
+            // 0        = cellsTravelledPerInterval  (00 mph)
+            // 6.375    = cellsTravelledPerInterval  (05 mph)
+            // 5.5      = cellsTravelledPerInterval  (10 mph)
+            // 6.375    = cellsTravelledPerInterval  (15 mph)
+            // 5.5      = cellsTravelledPerInterval  (20 mph)
+            // 6.375    = cellsTravelledPerInterval  (25 mph)
+            // 5.5      = cellsTravelledPerInterval  (30 mph)
+            // 6.375    = cellsTravelledPerInterval  (35 mph)
+            // 5.5      = cellsTravelledPerInterval  (40 mph)
+            // 6.375    = cellsTravelledPerInterval  (45 mph)
+            // 5.5      = cellsTravelledPerInterval  (50 mph)
+            // 6.375    = cellsTravelledPerInterval  (55 mph)
+            // 22       = cellsTravelledPerInterval  (60 mph)
+            // 6.375    = cellsTravelledPerInterval  (75 mph)
+            int cellsTravelledPerInterval = Convert.ToInt32(feetTraveledPerInterval / FEETPERCELL);
+            return cellsTravelledPerInterval;
+        }
+        private static int CalculateVehicleBrakingForceToMaintainLeadPreference(Vehicle vehicle, Vehicle leadingCar, double updateIntervalTotalMilliseconds)
         {
             int brakeDecrease = 0;
             var speedDifference = vehicle.Mph - leadingCar.Mph;
             var cellDistanceFromLeadVehicleRearBumper = leadingCar.RearBumper - vehicle.FrontBumper;
             var brakingCellsLeft = cellDistanceFromLeadVehicleRearBumper - vehicle.AdaptiveCruisePreferredLeadNoOfCells;
+            var cellsTraveledPerInterval = CalculateCellsTravelledPerInterval(vehicle.Mph, updateIntervalTotalMilliseconds);
 
             if (speedDifference == 0)
             {
                 // don't brake
                 return 0;
             }
-            else if (speedDifference > 0 && brakingCellsLeft > RADARBRAKERANGE)
+            else if (speedDifference > 0 && brakingCellsLeft > (RADARBRAKERANGE * cellsTraveledPerInterval))
             {
                 // don't brake (yet); brake when in radarbrakerange
                 return 0;
@@ -858,7 +872,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                 return speedDifference;
             }
             else if (speedDifference > 0
-                && brakingCellsLeft <= RADARBRAKERANGE
+                && brakingCellsLeft <= (RADARBRAKERANGE * cellsTraveledPerInterval)
                 && cellDistanceFromLeadVehicleRearBumper > vehicle.AdaptiveCruisePreferredLeadNoOfCells)
             {
                 // apply gradual braking given the speedDifference && cellDistanceFromLeadVehicleRearBumper
