@@ -1,5 +1,6 @@
 import { EventEmitter, Injectable } from '@angular/core';
-import { HubConnection,HubConnectionBuilder, IStreamResult } from '@aspnet/signalr'
+import { HubConnection, HubConnectionBuilder, IStreamResult } from '@aspnet/signalr'
+import { Vehicle } from '../Models/Vehicle.model'
 
 
 @Injectable()
@@ -9,6 +10,7 @@ export class gameSignalRService {
   gameClosed = new EventEmitter<Boolean>();
   gameReset = new EventEmitter<Boolean>();
   gameLoopBenchmark = new EventEmitter<number>();
+  gameLoopVehicles = new EventEmitter<any>();
 
   private connectionIsEstablished = false;
   private _gameHubConnection: HubConnection;
@@ -57,6 +59,12 @@ export class gameSignalRService {
 
     this._gameHubConnection.on("gameLoopBenchmark",(gameLoopInMilliseconds:number) => {
       this.gameLoopBenchmark.emit(gameLoopInMilliseconds);
+    });
+
+    this._gameHubConnection.on("gameLoopVehicles", (gameLoopVehicles: any) => {
+      console.log('received vehicles from game loop: ')
+      console.log(gameLoopVehicles);
+      this.gameLoopVehicles.emit(gameLoopVehicles);
     });
   }
 

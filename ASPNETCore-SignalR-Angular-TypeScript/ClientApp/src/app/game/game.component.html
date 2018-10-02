@@ -34,7 +34,7 @@
               <th>AC</th>
               <th>Points</th>
             </thead>
-            <tr *ngFor="let vehicle of vehicles">
+            <tr *ngFor="let vehicle of vehiclesStream">
               <td class="left">{{vehicle.name}}</td>
               <td>{{vehicle.mph}}</td>
               <td [ngClass]="{'crashed': vehicle.drivingStatus == 'Crashed' }">{{vehicle.x}}</td>
@@ -52,7 +52,7 @@
             <th>Status</th>
             <th>Notes</th>
             </thead>
-            <tr *ngFor="let vehicle of vehicles">
+            <tr *ngFor="let vehicle of vehiclesStream">
               <td class="left">{{vehicle.name}}</td>
               <td [ngClass]="{'crashed': vehicle.drivingStatus == 'Crashed' }">{{vehicle.drivingStatus}}</td>
               <td>{{vehicle.status}}</td>

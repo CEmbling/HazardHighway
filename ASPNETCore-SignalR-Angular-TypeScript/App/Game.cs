@@ -97,6 +97,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
             }
             s.Stop();
             await BroadcastGameLoopBenchmark(s.ElapsedMilliseconds);
+            await BroadcastGameLoopVehicles();
         }
 
         private async Task UpdateVehiclesPositions()
@@ -111,10 +112,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
 
                     // update all vehicles before player 1; update player1 last
                     // player 1 publish to client will cause screen re-render
-                    foreach (var vehicle in this._gameScenario.Vehicles.Values
-                                                                    .Where(v => v.DrivingStatus != DrivingStatus.Crashed.ToString())
-                                                                    //.OrderBy(v => v.Name == "Player 1")
-                                                                    )
+                    foreach (var vehicle in this._gameScenario.Vehicles.Values)
                     {
                         if (TryUpdateVehiclePosition(vehicle))
                         {
@@ -392,8 +390,6 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
             {
                 _subject.OnNext(vehicle.ToModel());
             }
-            //// signal to ui to re-render highway
-            //_subject.OnNext(new VehicleModel { Name = "RENDER_HWY" });
         }
 
         #endregion
@@ -481,11 +477,9 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                 {
                     _updatingVehiclePositions = true;
 
-                    foreach (var Vehicle in this._gameScenario.Vehicles.Where(v => v.Key == vehicle.Name).Select(x => x.Value))
+                    if (TryUpdateVehicleDrivingStatus(vehicle, drivingStatus))
                     {
-                        TryUpdateVehicleDrivingStatus(Vehicle, drivingStatus);
-
-                        //if(this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(vehicle.ToModel());
+                        if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(vehicle.ToModel());
                     }
 
                     _updatingVehiclePositions = false;
@@ -555,7 +549,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                     if (TryUpdateVehicleDrivingStatus(crashedIntoVehicle, DrivingStatus.Crashed))
                     {
                         TryUpdateVehicleMph(crashedIntoVehicle, 0);
-                        _subject.OnNext(crashedIntoVehicle.ToModel());
+                        if(this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(crashedIntoVehicle.ToModel());
                     }
                 }
 
@@ -625,12 +619,25 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                     }
                     else
                     {
-                        if(vehicle.DrivingStatus != DrivingStatus.Approaching.ToString())
+                        if (vehicle.Mph == 0)
                         {
-                            vehicle.DrivingStatus = DrivingStatus.Approaching.ToString();
-                            vehicle.Status = $"approaching {nearestCar.Name}";
-                            this._gameScenario.Vehicles[vehicle.Name] = vehicle;
-                            if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(vehicle.ToModel());
+                            if (vehicle.DrivingStatus != DrivingStatus.Stopped.ToString())
+                            {
+                                vehicle.DrivingStatus = DrivingStatus.Stopped.ToString();
+                                vehicle.Status = $"stopped by {nearestCar.Name}";
+                                this._gameScenario.Vehicles[vehicle.Name] = vehicle;
+                                if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(vehicle.ToModel());
+                            }
+                        }
+                        else
+                        {
+                            if (vehicle.DrivingStatus != DrivingStatus.Approaching.ToString())
+                            {
+                                vehicle.DrivingStatus = DrivingStatus.Approaching.ToString();
+                                vehicle.Status = $"approaching {nearestCar.Name}";
+                                this._gameScenario.Vehicles[vehicle.Name] = vehicle;
+                                if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(vehicle.ToModel());
+                            }
                         }
                     }
                 }
@@ -743,6 +750,10 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
         private async Task BroadcastGameLoopBenchmark(long milliseconds)
         {
             await _hub.Clients.All.SendAsync("GameLoopBenchmark", milliseconds);
+        }
+        private async Task BroadcastGameLoopVehicles()
+        {
+            await _hub.Clients.All.SendAsync("GameLoopVehicles", this.GetAllVehicles());
         }
         private async Task BroadcastGameStateChange(GameState GameState)
         {

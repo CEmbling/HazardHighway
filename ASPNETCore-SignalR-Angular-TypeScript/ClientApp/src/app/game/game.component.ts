@@ -21,7 +21,7 @@ export enum KEY_CODE {
 export class GameComponent {
 
   vehicles = []; // this gets updated at the completion of a game loop and rendered to ui
-  vehicleUpdates = []; // gets updated during game cycle
+  vehiclesStream = []; // gets updated during game cycle
   player1Vehicle:Vehicle;
   gameStatus: string = "reset";
   public lanes = [1,2,3,4,5,6,7,8];
@@ -35,17 +35,13 @@ export class GameComponent {
 
   constructor(private gameService: gameSignalRService) {
     this.player1Vehicle = new Vehicle();
+    this.vehiclesStream = [];
     this.vehicles = [];
-    this.vehicleUpdates = [];
 
     //subscribe for connection establish
     //fetch the vehicles details
     gameService.connectionEstablished.subscribe(() => {
-      gameService.getAllVehicles().then((data) => {
-        this.vehicles = data;
-        this.vehicleUpdates = data;
-        this.renderHwy();
-      });
+      this.initVehicles();
     });
 
     //subscribe for game open event
@@ -64,16 +60,90 @@ export class GameComponent {
     gameService.gameReset.subscribe(() => {
       this.gameStatus = "reset";
       this.alert = "Game reset.";
+      this.initVehicles();
       this.gameService.openGame();
     });
 
     //subscribe for game close event
     gameService.gameLoopBenchmark.subscribe((gameLoopInMilliseconds: number) => {
       this.gameLoopInMilliseconds = gameLoopInMilliseconds;
-      this.vehicles = this.vehicleUpdates.slice(0);
+      //this.vehicles = this.vehicleUpdates.slice(0);
+      //this.renderHwy();
+    });
+
+    gameService.gameLoopVehicles.subscribe((gameLoopVehicles: any) => {
+      let gameLoopVehiclesArray: Array<Vehicle> = gameLoopVehicles as Array<Vehicle>;
+      for (var i = 0, len = gameLoopVehiclesArray.length; i < len; i++) {
+        this.displayVehicle(gameLoopVehiclesArray[i]);
+      }
       this.renderHwy();
     });
   }
+
+  initVehicles() {
+    this.gameService.getAllVehicles().then((data) => {
+      this.vehicles = data;
+      this.vehiclesStream = data;
+      this.renderHwy();
+    });
+  }
+
+  openGameClicked() {
+    this.gameService.openGame();
+  }
+
+  startStreaming() {
+    this.gameService.startStreaming().subscribe({
+      next: (data) => {
+        this.displayVehicleStream(data);
+      },
+      error: function (err) {
+        console.log('Error:' + err);
+      },
+      complete: function () {
+        console.log('completed');
+      }
+    });
+  }
+
+  displayVehicle(vehicle) {
+    //console.log("vehicle updated:" + vehicle.name);
+    for (let i in this.vehicles) {
+      if (this.vehicles[i].name == vehicle.name) {
+        this.vehicles[i] = vehicle;
+      }
+      if (vehicle.name === "Player 1") {
+        this.player1Vehicle = vehicle;
+      }
+    }
+  }
+
+  displayVehicleStream(vehicle) {
+    //console.log("vehicle updated:" + vehicle.name);
+    for (let i in this.vehiclesStream) {
+      if (this.vehiclesStream[i].name == vehicle.name) {
+        this.vehiclesStream[i] = vehicle;
+      }
+    }
+  }
+
+  closeGameClicked() {
+    this.gameService.closeGame();
+  }
+
+  resetClicked() {
+    this.alert = "";
+    this.rows = [];
+    this.gameService.resetGame();
+    this.renderHwy();
+  }
+
+  playAgainClicked() {
+    this.alert = "";
+    this.rows = [];
+    this.gameService.resetGame();
+  }
+
 
   @HostListener('window:keydown', ['$event'])
   keyEvent(event: KeyboardEvent) {   
@@ -114,78 +184,11 @@ export class GameComponent {
     this.gameService.decreaseSpeed();
   }
 
-  openGameClicked() {
-    this.gameService.openGame();
-  }
-
-  startStreaming() {
-    this.gameService.startStreaming().subscribe({
-      next: (data) => {
-        this.displayVehicle(data);
-        
-        //this.checkForGameEnding();
-      },
-      error: function (err) {
-        console.log('Error:' + err);
-      },
-      complete: function () {
-        console.log('completed');
-      }
-    });
-  }
-
-  closeGameClicked() {
-    this.gameService.closeGame();
-  }
-
-  resetClicked() {
-    this.alert = "";
-    this.rows = [];
-    this.gameService.resetGame();
-    this.renderHwy();
-  }
-
-  playAgainClicked(){
-    this.alert = "";
-    this.rows = [];
-    this.gameService.resetGame();
-  }
-
   toggleAdaptiveCruise(){
     this.gameService.toggleAdaptiveCruise();
   }
 
-  checkForGameEnding(){
-    // are any cars still driving that haven't gotten their AC enabled?
-    let count:number = 0;
-    if(this.gameStatus == 'open'){
-      for (let i in this.vehicles) {
-        if (this.vehicles[i].drivingStatus != "Crashed"
-          && !this.vehicles[i].adaptiveCruiseOn
-          && this.vehicles[i].mph > 0) 
-        {
-          // keep playing
-          count++
-        }
-      }
-      if(count===0)
-      {
-        //this.gameService.closeGame();
-      }
-    }
-  }
-
-  displayVehicle(vehicle) {
-    //console.log("vehicle updated:" + vehicle.name);
-    for (let i in this.vehicleUpdates) {
-      if (this.vehicleUpdates[i].name == vehicle.name) {
-        this.vehicleUpdates[i] = vehicle;
-      }
-      if(vehicle.name === "Player 1"){
-        this.player1Vehicle = vehicle;
-      }
-    }
-  }
+  // ***** ALL RENDERING ***********
   renderHwy(){
     // clear rows
     this.rows = []; 
