@@ -20,7 +20,8 @@ export enum KEY_CODE {
 
 export class GameComponent {
 
-  vehicles = [];
+  vehicles = []; // this gets updated at the completion of a game loop and rendered to ui
+  vehicleUpdates = []; // gets updated during game cycle
   player1Vehicle:Vehicle;
   gameStatus: string = "reset";
   public lanes = [1,2,3,4,5,6,7,8];
@@ -35,12 +36,14 @@ export class GameComponent {
   constructor(private gameService: gameSignalRService) {
     this.player1Vehicle = new Vehicle();
     this.vehicles = [];
+    this.vehicleUpdates = [];
 
     //subscribe for connection establish
     //fetch the vehicles details
     gameService.connectionEstablished.subscribe(() => {
       gameService.getAllVehicles().then((data) => {
         this.vehicles = data;
+        this.vehicleUpdates = data;
         this.renderHwy();
       });
     });
@@ -65,10 +68,11 @@ export class GameComponent {
     });
 
     //subscribe for game close event
-    gameService.gameLoopBenchmark.subscribe((gameLoopInMilliseconds:number) => {
+    gameService.gameLoopBenchmark.subscribe((gameLoopInMilliseconds: number) => {
       this.gameLoopInMilliseconds = gameLoopInMilliseconds;
+      this.vehicles = this.vehicleUpdates.slice(0);
+      this.renderHwy();
     });
-    
   }
 
   @HostListener('window:keydown', ['$event'])
@@ -118,13 +122,8 @@ export class GameComponent {
     this.gameService.startStreaming().subscribe({
       next: (data) => {
         this.displayVehicle(data);
-        if (data.name == "Player 1") {
-            this.gameService.getAllVehicles().then((data) => {
-              this.vehicles = data;
-              this.renderHwy();
-            });
-          }
-        this.checkForGameEnding();
+        
+        //this.checkForGameEnding();
       },
       error: function (err) {
         console.log('Error:' + err);
@@ -171,16 +170,16 @@ export class GameComponent {
       }
       if(count===0)
       {
-        this.gameService.closeGame();
+        //this.gameService.closeGame();
       }
     }
   }
 
   displayVehicle(vehicle) {
     //console.log("vehicle updated:" + vehicle.name);
-    for (let i in this.vehicles) {
-      if (this.vehicles[i].name == vehicle.name) {
-        this.vehicles[i] = vehicle;
+    for (let i in this.vehicleUpdates) {
+      if (this.vehicleUpdates[i].name == vehicle.name) {
+        this.vehicleUpdates[i] = vehicle;
       }
       if(vehicle.name === "Player 1"){
         this.player1Vehicle = vehicle;

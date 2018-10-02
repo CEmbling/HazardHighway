@@ -21,12 +21,12 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.Hubs
 			this._game = game;
 		}
 
-		public IEnumerable<Vehicle> GetAllVehicles()
+		public IEnumerable<VehicleModel> GetAllVehicles()
 		{
 			return _game.GetAllVehicles();
 		}
 
-		public ChannelReader<Vehicle> StreamVehicles()
+		public ChannelReader<VehicleModel> StreamVehicles()
 		{
 			return _game.StreamVehicles().AsChannelReader(10);
 		}

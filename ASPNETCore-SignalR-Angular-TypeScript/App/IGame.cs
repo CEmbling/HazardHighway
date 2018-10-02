@@ -9,8 +9,8 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
     interface IGame
     {
         GameState GameState { get; }
-        IEnumerable<Vehicle> GetAllVehicles();
-        IObservable<Vehicle> StreamVehicles();
+        IEnumerable<VehicleModel> GetAllVehicles();
+        IObservable<VehicleModel> StreamVehicles();
         Task OpenGame();
         Task CloseGame();
         Task Reset();

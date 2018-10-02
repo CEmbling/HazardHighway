@@ -33,7 +33,11 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
 			services.AddSignalR();
 
 			services.AddSingleton<StockTicker>();
+
+            services.AddSingleton<Constants>();
             services.AddSingleton<Game>();
+            services.AddSingleton<Terminology>();
+            services.AddScoped<IBrakingAlgorithm, BrakingAlgorithm>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
