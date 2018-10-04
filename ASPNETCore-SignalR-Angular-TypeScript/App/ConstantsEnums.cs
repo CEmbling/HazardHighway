@@ -29,8 +29,8 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
         public int RADARINDICATORRANGETOSAVE = 8;
         public Dictionary<int, int> safeStoppingCellDistances = new Dictionary<int, int>()
         {
-            {0, 4},
-            {5, 6},
+            {0, 3},
+            {5, 5},
             {10, 15},
             {15, 26},
             {20, 39},

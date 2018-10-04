@@ -121,7 +121,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
 
             var cellClosurePerInterval = Math.Abs(lead.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds) - host.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds));
             var cellDistance = lead.RearBumper - host.FrontBumper;
-            double safeDistanceMultiplier = 2;  // 1.2, 1.4, 1.6
+            double safeDistanceMultiplier = 3;  // 1.2, 1.4, 1.6
             var hostSpeedDifferenceFromLead = lead.Mph - host.Mph;
 
             if (lead.Mph > host.Mph)

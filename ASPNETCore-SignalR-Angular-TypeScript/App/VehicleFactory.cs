@@ -41,5 +41,37 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             vehicles.ForEach(v => v.DrivingStatus = v.AdaptiveCruiseOn ? DrivingStatus.Cruising.ToString() : DrivingStatus.Driving.ToString());
             return vehicles;
         }
+        public static List<Vehicle> GetTrainingVehicles(Constants constants, Terminology terms)
+        {
+            var vehicles = new List<Vehicle>
+            {
+                // left lane
+                Vehicle.Factory.Create("Toyota Prius",      mph:30, x: 5,   y: 3, adaptiveCruiseOn: true),
+                Vehicle.Factory.Create("Toyota Camry",      mph:30, x: 50,  y: 3, adaptiveCruiseOn: true),
+                Vehicle.Factory.Create("Toyota Highlander", mph:30, x: 100, y: 3, adaptiveCruiseOn: true),
+                Vehicle.Factory.Create("Toyota Corolla",    mph:30, x: 150, y: 3, adaptiveCruiseOn: true),               
+
+                // middle lane
+                Vehicle.Factory.Create(constants.PLAYER1,   mph:30, x: 0,   y: 5, adaptiveCruiseOn: true),
+                Vehicle.Factory.Create("Ford Edge",         mph:30, x: 21,  y: 5, adaptiveCruiseOn: true),
+                Vehicle.Factory.Create("Ford Explorer",     mph:30, x: 40,  y: 5, adaptiveCruiseOn: true),
+                Vehicle.Factory.Create("Ford Escape",       mph:30, x: 160, y: 5, adaptiveCruiseOn: true),
+
+                // right lane
+                Vehicle.Factory.Create("Chevy Traverse",    mph:30, x:7,  y:7, adaptiveCruiseOn: true),
+                Vehicle.Factory.Create("Chevy Malibu",      mph:30, x:30, y:7, adaptiveCruiseOn: true),
+                Vehicle.Factory.Create("Chevy Taho",        mph:30, x:50, y:7, adaptiveCruiseOn: true),
+                Vehicle.Factory.Create("Cal's Pigeon",      mph:30, x:70, y:7, adaptiveCruiseOn: true),
+
+                // introduce hazards into the highway
+                Vehicle.Factory.Create("Gawker 1",          mph:0,  x:1000,   y:3, adaptiveCruiseOn: true),
+                Vehicle.Factory.Create("Disabled Vehicle",  mph:0,  x:1000,   y:5, adaptiveCruiseOn: true),
+                Vehicle.Factory.Create("Gawker 2",          mph:0,  x:1000,   y:7, adaptiveCruiseOn: true),
+            };
+
+            vehicles.ForEach(v => v.DrivingAdjective = v.AdaptiveCruiseOn ? terms.GetRandomTerm(TermList.Safe) : terms.GetRandomTerm(TermList.Unsafe));
+            vehicles.ForEach(v => v.DrivingStatus = v.AdaptiveCruiseOn ? DrivingStatus.Cruising.ToString() : DrivingStatus.Driving.ToString());
+            return vehicles;
+        }
     }
 }
