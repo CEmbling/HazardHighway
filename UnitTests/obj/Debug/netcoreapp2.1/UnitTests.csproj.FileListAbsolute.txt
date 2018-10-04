@@ -12,3 +12,7 @@ C:\Repos\games\HazardHighway\UnitTests\obj\Debug\netcoreapp2.1\UnitTests.Assembl
 C:\Repos\games\HazardHighway\UnitTests\obj\Debug\netcoreapp2.1\UnitTests.AssemblyInfo.cs
 C:\Repos\games\HazardHighway\UnitTests\obj\Debug\netcoreapp2.1\UnitTests.dll
 C:\Repos\games\HazardHighway\UnitTests\obj\Debug\netcoreapp2.1\UnitTests.pdb
+C:\Repos\games\HazardHighway\UnitTests\bin\Debug\netcoreapp2.1\ASPNETCore_SignalR_Angular_TypeScript.Views.dll
+C:\Repos\games\HazardHighway\UnitTests\bin\Debug\netcoreapp2.1\ASPNETCore_SignalR_Angular_TypeScript.Views.pdb
+C:\Repos\games\HazardHighway\UnitTests\bin\Debug\netcoreapp2.1\ASPNETCore_SignalR_Angular_TypeScript.dll
+C:\Repos\games\HazardHighway\UnitTests\bin\Debug\netcoreapp2.1\ASPNETCore_SignalR_Angular_TypeScript.pdb

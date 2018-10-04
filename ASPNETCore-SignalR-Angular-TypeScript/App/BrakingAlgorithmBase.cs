@@ -8,6 +8,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
     public abstract class BrakingAlgorithmBase
     {
         private Constants _constants;
+        
         public BrakingAlgorithmBase(Constants constants)
         {
             this._constants = constants;
@@ -54,44 +55,101 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
 
         public int CalculateBrakeForce(Vehicle lead, Vehicle host, double updateIntervalTotalMilliseconds)
         {
-            if (lead.Mph == 0)
-            {
-                // brake
-                return 5;
-            }
-
             var cellClosurePerInterval = Math.Abs(lead.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds) - host.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds));
             var cellDistance = lead.RearBumper - host.FrontBumper;
             var intervalsToCollision = this.CalculateCrashCellDistance(cellDistance, cellClosurePerInterval);
-            var safeIntervalsToFollow = 2;  // 2-4
+            //var safeIntervalsToBrake = intervalsToCollision + 1;
+            double safeIntervalsToFollow = 2;  // 1.2, 1.4, 1.6
             var hostSpeedDifferenceFromLead = lead.Mph - host.Mph;
 
-            if(hostSpeedDifferenceFromLead > 0)
+            if (lead.Mph > host.Mph)
             {
-                // lead is accelerating away
+                // lead is accelerating faster than host, no need to brake
+                return 0;
             }
-            else if (hostSpeedDifferenceFromLead == 0)
+            else if (lead.Mph == 0)
             {
-                // check if too close
-                if (intervalsToCollision <= safeIntervalsToFollow)
+                // lead is stopped; host is approaching
+                var safeStoppingDistance = this._constants.safeStoppingCellDistances[host.Mph - lead.Mph];
+                if (cellDistance <= safeStoppingDistance + safeIntervalsToFollow)
                 {
                     return _constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE;
                 }
             }
-            else if (hostSpeedDifferenceFromLead < 0)
+            else
             {
-                // lead is traveling slower; host is approaching
-                var intervalsNeededToMatchSpeed = Math.Abs(hostSpeedDifferenceFromLead) / _constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE;
-
-                if (intervalsToCollision <= (safeIntervalsToFollow + intervalsNeededToMatchSpeed))
+                // host is approaching moving lead
+                var safeTailingCellDistance = this._constants.safeTailingCellDistances[Math.Abs(hostSpeedDifferenceFromLead)];
+                if(cellDistance < safeTailingCellDistance)
                 {
                     return _constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE;
+                }
+
+                //// predict where host & lead will be next interval, if it's too close, brake this interval
+                //// driver prefers: 
+                ////      approaching to match speed and safe tailing distance vs.
+                ////      approaching too close, braking and then acceleration to match speed and safe tailing distance
+                //var cellDistancePredictedNextInterval = lead.RearBumper + lead.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds) - (host.FrontBumper + host.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds));
+                //var intervalsToCollisionPredictedNextInterval = this.CalculateCrashCellDistance(cellDistance, cellClosurePerInterval);
+                //if ((intervalsToCollision < safeIntervalsToFollow || intervalsToCollisionPredictedNextInterval < safeIntervalsToFollow) &&
+                //    Math.Abs(hostSpeedDifferenceFromLead) > 5)
+                //{
+                //    return _constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE;
+                //}
+            }
+            return 0;
+        }
+
+        public int CalculateAccelerationForce(Vehicle lead, Vehicle host, double updateIntervalTotalMilliseconds)
+        {
+            if (!host.AdaptiveCruiseOn)
+            {
+                return 0;
+            }
+            var isHostGoingDesiredMph = host.AdaptiveCruiseMph == host.Mph || host.AdaptiveCruiseMph == 0;
+            if (isHostGoingDesiredMph)
+            {
+                return 0;
+            }
+            // from here down, host desires to go faster than current mph
+
+            var cellClosurePerInterval = Math.Abs(lead.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds) - host.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds));
+            var cellDistance = lead.RearBumper - host.FrontBumper;
+            double safeIntervalsToFollow = 2;  // 1.2, 1.4, 1.6
+            var hostSpeedDifferenceFromLead = lead.Mph - host.Mph;
+
+            if (lead.Mph > host.Mph)
+            {
+                // lead is accelerating faster than host, no need to brake
+                return _constants.VEHICLE_MPH_ACCELERATION_RATE;
+                
+            }
+            else if (lead.Mph == 0)
+            {
+                // lead is stopped; host is approaching
+                var safeStoppingDistance = this._constants.safeStoppingCellDistances[host.Mph - lead.Mph];
+                if (cellDistance > safeStoppingDistance + safeIntervalsToFollow)
+                {
+                    return _constants.VEHICLE_MPH_ACCELERATION_RATE;
+                }
+            }
+            else
+            {
+                // host is approaching moving lead
+                var safeTailingCellDistance = this._constants.safeTailingCellDistances[Math.Abs(hostSpeedDifferenceFromLead)];
+                if (cellDistance > safeTailingCellDistance + safeIntervalsToFollow)
+                {
+                    return _constants.VEHICLE_MPH_ACCELERATION_RATE;
                 }
             }
             return 0;
         }
         private double CalculateCrashCellDistance(double cellDistanceFromLead, double cellClosurePerInterval)
         {
+            if(cellClosurePerInterval == 0)
+            {
+                return 0;
+            }
             double intervalsToCollision = cellDistanceFromLead / cellClosurePerInterval;
             if (intervalsToCollision > Convert.ToInt32(intervalsToCollision))
             {

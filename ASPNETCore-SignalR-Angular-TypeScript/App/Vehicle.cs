@@ -52,6 +52,10 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
         {
             return this._brakingAlgorithm.CalculateBrakeForce(leadVehicle, this, updateIntervalTotalMilliseconds);
         }
+        public int CalculateVehicleAccelerationForceToMaintainLeadPreference(Vehicle leadVehicle, double updateIntervalTotalMilliseconds)
+        {
+            return this._brakingAlgorithm.CalculateAccelerationForce(leadVehicle, this, updateIntervalTotalMilliseconds);
+        }
         public int CalculateCellsTravelledPerInterval(double updateIntervalTotalMilliseconds)
         {
             if (this.Mph <= 0)

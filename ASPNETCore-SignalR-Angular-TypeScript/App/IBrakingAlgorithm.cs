@@ -9,6 +9,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
     public interface IBrakingAlgorithm
     {
         int CalculateBrakeForce(Vehicle lead, Vehicle host, double updateIntervalTotalMilliseconds);
+        int CalculateAccelerationForce(Vehicle lead, Vehicle host, double updateIntervalTotalMilliseconds);
         int CalculateCellsTravelledPerInterval(int mph, double updateIntervalTotalMilliseconds);
     }
 }

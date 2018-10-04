@@ -567,121 +567,149 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                 }
             }
         }
-        private async Task CheckVehicleForApproachingVehicles(Vehicle vehicle)
+        private async Task CheckVehicleForApproachingVehicles(Vehicle host)
         {
-            if (!vehicle.AdaptiveCruiseOn)
+            if (!host.AdaptiveCruiseOn)
                 return;
+
+            var isHostGoingDesiredMph = host.AdaptiveCruiseMph == host.Mph;
 
             // check for vehicals within range in front of vehicle
             var carsInRadarRange = await this._gameScenario.Vehicles
-                .Where(otherVehicle => otherVehicle.Key != vehicle.Name
-                    && otherVehicle.Value.Y == vehicle.Y                                                // in same lane
-                    && otherVehicle.Value.RearBumper <= vehicle.FrontBumper + this._constants.RADARINDICATORRANGE      // within radar range
-                    && otherVehicle.Value.RearBumper > vehicle.FrontBumper                              // within radar range
+                .Where(otherVehicle => otherVehicle.Key != host.Name
+                    && otherVehicle.Value.Y == host.Y                                                // in same lane
+                    && otherVehicle.Value.RearBumper <= host.FrontBumper + this._constants.RADARINDICATORRANGE      // within radar range
+                    && otherVehicle.Value.RearBumper > host.FrontBumper                              // within radar range
                 ).ToAsyncEnumerable().ToList();
 
-            vehicle.AdaptiveCruiseFrontRadarIndicator = carsInRadarRange.Any();
+            host.AdaptiveCruiseFrontRadarIndicator = carsInRadarRange.Any();
 
-            if (vehicle.AdaptiveCruiseFrontRadarIndicator)
+            if (host.AdaptiveCruiseFrontRadarIndicator)
             {
-                // if vehicle is traveling faster than oncoming car, decrease speed until preferred car length is achieved, then match speed
-                var nearestCar = carsInRadarRange.OrderBy(x => x.Value.X).First().Value;
-                var speedDifference = nearestCar.Mph < vehicle.Mph;
-                if (speedDifference)
-                {
-                    // we may need to decrease speed...check distance first
-                    // calculate breaking force
-                    var brakeForce = vehicle.CalculateVehicleBrakingForceToMaintainLeadPreference(nearestCar, this._updateInterval.TotalMilliseconds);
-                    if (brakeForce > 0)
-                    {
-                        // breaking is necessary
-                        if (vehicle.AdaptiveCruiseMph == 0)
-                        {
-                            // store original speed (so we can return to it when the slow car moves)
-                            vehicle.AdaptiveCruiseMph = vehicle.Mph;
-                        }
+                // lead vehicle in radar range
+                var lead = carsInRadarRange.OrderBy(x => x.Value.X).First().Value;
 
-                        vehicle.Mph = vehicle.Mph - brakeForce >= 0? vehicle.Mph - brakeForce : 0;
-                        if(vehicle.Mph == 0)
+                var isHostApproaching = host.Mph > lead.Mph;
+                var isHostStopped = host.Mph == 0;
+                var isHostTailing = host.Mph == lead.Mph;
+
+                // we may need to decrease speed...check distance first
+                // calculate breaking force
+                var brakeForce = host.CalculateVehicleBrakingForceToMaintainLeadPreference(lead, this._updateInterval.TotalMilliseconds);
+                if (brakeForce > 0)
+                {
+                    // breaking is necessary
+                    if (host.AdaptiveCruiseMph == 0)
+                    {
+                        // store original speed (so we can return to it when the slow car moves)
+                        host.AdaptiveCruiseMph = host.Mph;
+                    }
+
+                    host.Mph = host.Mph - brakeForce >= 0 ? host.Mph - brakeForce : 0;
+                    if (host.Mph == 0)
+                    {
+                        if (host.DrivingStatus != DrivingStatus.Stopped.ToString())
                         {
-                            vehicle.Status = $"stopped for {nearestCar.Name}";
-                            vehicle.DrivingStatus = DrivingStatus.Stopped.ToString();
-                            this._gameScenario.Vehicles[vehicle.Name] = vehicle;
-                            if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(vehicle.ToModel());
+                            host.Status = $"stopped for {lead.Name}";
+                            host.DrivingStatus = DrivingStatus.Stopped.ToString();
+                            this._gameScenario.Vehicles[host.Name] = host;
+                            if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(host.ToModel());
                         }
-                        else
+                        return;
+                    }
+                    else
+                    {
+                        if (host.DrivingStatus != DrivingStatus.AutoBraking.ToString())
                         {
-                            vehicle.Status = $"autobraking for {nearestCar.Name}";
-                            vehicle.DrivingStatus = DrivingStatus.AutoBraking.ToString();
-                            this._gameScenario.Vehicles[vehicle.Name] = vehicle;
-                            if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(vehicle.ToModel());
+                            host.Status = $"autobraking for {lead.Name}";
+                            host.DrivingStatus = DrivingStatus.AutoBraking.ToString();
+                            this._gameScenario.Vehicles[host.Name] = host;
+                            if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(host.ToModel());
+                        }
+                        return;
+                    }
+                }
+                else // brakeForce == 0  // no braking necessary
+                {
+                    // determine if acceleration is desired
+                    var accelerationForce = host.CalculateVehicleAccelerationForceToMaintainLeadPreference(lead, this._updateInterval.TotalMilliseconds);
+                    if (accelerationForce > 0)
+                    {
+                        if (!isHostGoingDesiredMph)
+                        {
+                            // accelerating to desired speed
+                            host.Mph += accelerationForce;
+                            host.Status = $"resuming to {host.AdaptiveCruiseMph} mph";
+                            host.DrivingStatus = DrivingStatus.Resuming.ToString();
+                            this._gameScenario.Vehicles[host.Name] = host;
+                            if (host.DrivingStatus != DrivingStatus.Resuming.ToString())
+                            {
+                                if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(host.ToModel());
+                            }
                         }
                     }
                     else
                     {
-                        if (vehicle.Mph == 0)
+                        // no acceleration necessary
+                        if (isHostApproaching)
                         {
-                            if (vehicle.DrivingStatus != DrivingStatus.Stopped.ToString())
+                            // host is approaching
+                            host.DrivingStatus = DrivingStatus.Approaching.ToString();
+                            host.Status = $"approaching {lead.Name}";
+                            this._gameScenario.Vehicles[host.Name] = host;
+                            if (host.DrivingStatus != DrivingStatus.Approaching.ToString())
                             {
-                                vehicle.DrivingStatus = DrivingStatus.Stopped.ToString();
-                                vehicle.Status = $"stopped by {nearestCar.Name}";
-                                this._gameScenario.Vehicles[vehicle.Name] = vehicle;
-                                if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(vehicle.ToModel());
+                                if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(host.ToModel());
                             }
                         }
-                        else
+                        else if (isHostTailing)
                         {
-                            if (vehicle.DrivingStatus != DrivingStatus.Approaching.ToString())
+                            // host is tailing
+                            host.DrivingStatus = DrivingStatus.Tailing.ToString();
+                            host.Status = $"tailing {lead.Name}";
+                            this._gameScenario.Vehicles[host.Name] = host;
+                            if (host.DrivingStatus != DrivingStatus.Tailing.ToString())
                             {
-                                vehicle.DrivingStatus = DrivingStatus.Approaching.ToString();
-                                vehicle.Status = $"approaching {nearestCar.Name}";
-                                this._gameScenario.Vehicles[vehicle.Name] = vehicle;
-                                if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(vehicle.ToModel());
+                                if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(host.ToModel());
                             }
                         }
-                    }
-                }
-                else
-                {
-                    if(vehicle.Mph == 0 && vehicle.DrivingStatus != DrivingStatus.Stopped.ToString())
-                    {
-                        vehicle.DrivingStatus = DrivingStatus.Stopped.ToString();
-                        vehicle.Status = $"stopped {nearestCar.Name}";
-                        this._gameScenario.Vehicles[vehicle.Name] = vehicle;
-                        if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(vehicle.ToModel());
-                    }
-                    // matched speed, 
-                    if (vehicle.DrivingStatus != DrivingStatus.Tailing.ToString())
-                    {
-                        vehicle.DrivingStatus = DrivingStatus.Tailing.ToString();
-                        vehicle.Status = $"tailing {nearestCar.Name}";
-                        this._gameScenario.Vehicles[vehicle.Name] = vehicle;
-                        if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(vehicle.ToModel());
+                        else if (isHostStopped)
+                        {
+                            host.DrivingStatus = DrivingStatus.Stopped.ToString();
+                            host.Status = $"stopped by {lead.Name}";
+                            this._gameScenario.Vehicles[host.Name] = host;
+                            if (host.DrivingStatus != DrivingStatus.Stopped.ToString())
+                            {
+                                if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(host.ToModel());
+                            }
+                        }
                     }
                 }
             }
             else
             {
-                if (vehicle.AdaptiveCruiseMph != 0
-                    && vehicle.Mph < vehicle.AdaptiveCruiseMph)
+                // no lead cars in radar range
+                if (!isHostGoingDesiredMph)
                 {
-                    // accelerating to normal speed
-                    vehicle.Mph += this._constants.VEHICLE_MPH_ACCELERATION_RATE;
-                    vehicle.Status = $"resuming to {vehicle.AdaptiveCruiseMph}";
-                    vehicle.DrivingStatus = DrivingStatus.Resuming.ToString();
-                    this._gameScenario.Vehicles[vehicle.Name] = vehicle;
-                    if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(vehicle.ToModel());
+                    // accelerating to desired speed
+                    host.Mph += this._constants.VEHICLE_MPH_ACCELERATION_RATE;
+                    if (host.DrivingStatus != DrivingStatus.Resuming.ToString())
+                    {
+                        host.Status = $"resuming to {host.AdaptiveCruiseMph} mph";
+                        host.DrivingStatus = DrivingStatus.Resuming.ToString();
+                        this._gameScenario.Vehicles[host.Name] = host;
+                        if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(host.ToModel());
+                    }
                 }
-                else if (vehicle.AdaptiveCruiseMph != 0
-                    && vehicle.Mph == vehicle.AdaptiveCruiseMph)
+                else if (isHostGoingDesiredMph)
                 {
                     // vehicle returned to normal cruise speed
-                    if (vehicle.DrivingStatus != DrivingStatus.Cruising.ToString())
+                    if (host.DrivingStatus != DrivingStatus.Cruising.ToString())
                     {
-                        vehicle.Status = $"cruising at {vehicle.AdaptiveCruiseMph}";
-                        vehicle.DrivingStatus = DrivingStatus.Cruising.ToString();
-                        this._gameScenario.Vehicles[vehicle.Name] = vehicle;
-                        if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(vehicle.ToModel());
+                        host.Status = $"cruising at {host.AdaptiveCruiseMph} mph";
+                        host.DrivingStatus = DrivingStatus.Cruising.ToString();
+                        this._gameScenario.Vehicles[host.Name] = host;
+                        if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(host.ToModel());
                     }
                 }
             }
