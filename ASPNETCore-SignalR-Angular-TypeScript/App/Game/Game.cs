@@ -57,7 +57,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
 			_hub = hub;
             _constants = constants;
             _terms = terms;
-			LoadGame();
+			LoadGame(GameLevel.Level1);
 		}
 
         #endregion
@@ -69,9 +69,9 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
             get;
             set;
         }
-        private void LoadGame()
+        private void LoadGame(GameLevel gameLevel)
         {
-            this._gameScenario =  GameScenario.Factory.Create(GameLevel.Level1, this._constants, this._terms);
+            this._gameScenario =  GameScenario.Factory.Create(gameLevel, this._constants, this._terms);
         }
 
         // THIS IS THE GAME LOOP CYCLE
@@ -91,6 +91,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
             await CheckVehiclesForCollisions();            
             await CheckVehiclesForApproachingVehicles();
             await CheckVehiclesForBlindSpots();
+            
             if (!_constants.allowSubjectNextInsideGameLoop)
             {
                 await BroadcastAllVehiclesSubjects();
@@ -98,6 +99,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
             s.Stop();
             await BroadcastGameLoopBenchmark(s.ElapsedMilliseconds);
             await BroadcastGameLoopVehicles();
+            await CheckForGameEnding();
         }
 
         private async Task UpdateVehiclesPositions()
@@ -235,6 +237,60 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                 _VehiclePositionsLock.Release();
             }
         }
+        private async Task CheckForGameEnding()
+        {
+            // This function must be re-entrant as it's running as a timer interval handler
+            await _VehiclePositionsLock.WaitAsync();
+            try
+            {
+                if (!_updatingVehiclePositions)
+                {
+                    _updatingVehiclePositions = true;
+
+                    var vehicleCount = this._gameScenario.Vehicles.Count();
+
+                    // did player 1 crash?
+                    var gameLost = this._gameScenario.Vehicles
+                                    .Where(v => v.Value.Name == _constants.PLAYER1
+                                            && v.Value.DrivingStatus == DrivingStatus.Crashed.ToString())
+                                    .Any();
+
+                    // did all vehicles stop successfully?
+                    gameLost = this._gameScenario.Vehicles
+                                    .Where(v => v.Value.DrivingStatus == DrivingStatus.Stopped.ToString()
+                                    || v.Value.DrivingStatus == DrivingStatus.Crashed.ToString())
+                                    .Count() == vehicleCount;
+
+                    // did all vehicles stop successfully?
+                    var gameWon = this._gameScenario.Vehicles
+                                    .Where(v => v.Value.DrivingStatus == DrivingStatus.Stopped.ToString())
+                                    .Count() == vehicleCount;
+
+                    _updatingVehiclePositions = false;
+
+                    if (gameWon)
+                    {
+                        await CloseGame();
+                        await BroadcastGameWon();
+                        return;
+                    }
+                    else if(gameLost)
+                    {
+                        await CloseGame();
+                        await BroadcastGameLost();
+                        return;
+                    }
+                    else
+                    {
+                        // game still going
+                    }
+                }
+            }
+            finally
+            {
+                _VehiclePositionsLock.Release();
+            }
+        }
         private async Task UpdateVehicleActions()
         {
             // This function must be re-entrant as it's running as a timer interval handler
@@ -295,18 +351,22 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
             switch (action.VehicleAction)
             {
                 case VehicleAction.IncreaseSpeed:
-                    if (TryUpdateVehicleMph(vehicle, vehicle.Mph + 5))
+                    if (vehicle.Mph + this._constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE > this._constants.VEHICLE_MPH_MAX_ACCELERATION)
+                        return false;
+                    if (TryUpdateVehicleMph(vehicle, vehicle.Mph + this._constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE))
                     {
                         vehicle.DrivingStatus = DrivingStatus.Accelerating.ToString();
                         if (vehicle.AdaptiveCruiseOn)
                         {
                             // keep in AdaptiveCruiseMph insync w/ human accelerating
-                            vehicle.AdaptiveCruiseMph = vehicle.Mph;
+                            vehicle.AdaptiveCruiseDesiredMph = vehicle.Mph;
                         }
                     }
                     break;
                 case VehicleAction.DecreaseSpeed:
-                    if (TryUpdateVehicleMph(vehicle, vehicle.Mph - 5))
+                    if (vehicle.Mph == 0)
+                        return false;
+                    if (TryUpdateVehicleMph(vehicle, vehicle.Mph - this._constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE))
                     {
                         if (vehicle.Mph == 0)
                         {
@@ -320,7 +380,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                         if (vehicle.AdaptiveCruiseOn)
                         {
                             // keep in AdaptiveCruiseMph insync w/ human deaccelaration
-                            vehicle.AdaptiveCruiseMph = vehicle.Mph;
+                            vehicle.AdaptiveCruiseDesiredMph = vehicle.Mph;
                         }
                     }
                     break;
@@ -346,14 +406,13 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                     {
                         TryUpdateVehicleDrivingStatus(vehicle, DrivingStatus.Cruising);
                         // keep AdaptiveCruiseMph insync w/ human initiated events, like enabled AC
-                        vehicle.AdaptiveCruiseMph = vehicle.Mph;
+                        vehicle.AdaptiveCruiseDesiredMph = vehicle.Mph;
                     }
                     else
                     {
                         TryUpdateVehicleDrivingStatus(vehicle, DrivingStatus.Driving);
-                        vehicle.AdaptiveCruiseMph = 0;
+                        vehicle.AdaptiveCruiseDesiredMph = 0;
                     }
-                    vehicle.Points += vehicle.AdaptiveCruiseOn ? 10 : 0;
                     break;
             }
             return true;
@@ -380,7 +439,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
         {
             if (mph >= 0)
             {
-                vehicle.Mph = mph;
+                vehicle.UpdateMph(mph);
             }
             return true;
         }
@@ -560,11 +619,12 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                     if(this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(vehicle.ToModel());
                 }
 
-                if (vehicle.Name == this._constants.PLAYER1 || crashedIntoVehicle.Name == this._constants.PLAYER1)
-                {
-                    // game over; player1 crashed!
-                    await this.CloseGame();
-                }
+                //if (vehicle.Name == this._constants.PLAYER1 || crashedIntoVehicle.Name == this._constants.PLAYER1)
+                //{
+                //    // game over; player1 crashed! consider doing this in the game status check
+                //    await this.CloseGame();
+                //    await this.BroadcastGameLost();
+                //}
             }
         }
         private async Task CheckVehicleForApproachingVehicles(Vehicle host)
@@ -572,7 +632,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
             if (!host.AdaptiveCruiseOn)
                 return;
 
-            var isHostGoingDesiredMph = host.AdaptiveCruiseMph == host.Mph;
+            var isHostStopped = host.Mph == 0;
 
             // check for vehicals within range in front of vehicle
             var carsInRadarRange = await this._gameScenario.Vehicles
@@ -590,7 +650,6 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                 var lead = carsInRadarRange.OrderBy(x => x.Value.X).First().Value;
 
                 var isHostApproaching = host.Mph > lead.Mph;
-                var isHostStopped = host.Mph == 0;
                 var isHostTailing = host.Mph == lead.Mph;
 
                 // we may need to decrease speed...check distance first
@@ -599,33 +658,33 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                 if (brakeForce > 0)
                 {
                     // breaking is necessary
-                    if (host.AdaptiveCruiseMph == 0)
+                    if (host.AdaptiveCruiseDesiredMph == 0)
                     {
                         // store original speed (so we can return to it when the slow car moves)
-                        host.AdaptiveCruiseMph = host.Mph;
+                        host.AdaptiveCruiseDesiredMph = host.Mph;
                     }
 
-                    host.Mph = host.Mph - brakeForce >= 0 ? host.Mph - brakeForce : 0;
+                    host.SubtractMph(brakeForce);
                     if (host.Mph == 0)
                     {
-                        host.Status = $"stopped for {lead.Name}";
-                        host.DrivingStatus = DrivingStatus.Stopped.ToString();
-                        this._gameScenario.Vehicles[host.Name] = host;
                         if (host.DrivingStatus != DrivingStatus.Stopped.ToString())
                         {
+                            host.Status = $"stopped for {lead.Name}";
+                            host.DrivingStatus = DrivingStatus.Stopped.ToString();
                             if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(host.ToModel());
                         }
+                        this._gameScenario.Vehicles[host.Name] = host;
                         return;
                     }
                     else
-                    {
-                        host.Status = $"autobraking for {lead.Name}";
-                        host.DrivingStatus = DrivingStatus.AutoBraking.ToString();
-                        this._gameScenario.Vehicles[host.Name] = host;
+                    {                       
                         if (host.DrivingStatus != DrivingStatus.AutoBraking.ToString())
                         {
+                            host.Status = $"autobraking for {lead.Name}";
+                            host.DrivingStatus = DrivingStatus.AutoBraking.ToString();
                             if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(host.ToModel());
                         }
+                        this._gameScenario.Vehicles[host.Name] = host;
                         return;
                     }
                 }
@@ -635,82 +694,93 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                     var accelerationForce = host.CalculateVehicleAccelerationForceToMaintainLeadPreference(lead, this._updateInterval.TotalMilliseconds);
                     if (accelerationForce > 0)
                     {
-                        if (!isHostGoingDesiredMph)
+                        if (!host.IsGoingDesiredMph)
                         {
                             // accelerating to desired speed
-                            host.Mph += accelerationForce;
-                            host.Status = $"resuming to {host.AdaptiveCruiseMph} mph";
-                            host.DrivingStatus = DrivingStatus.Resuming.ToString();
-                            this._gameScenario.Vehicles[host.Name] = host;
+                            host.AddMph(accelerationForce, isHumanInitiating:false);                            
                             if (host.DrivingStatus != DrivingStatus.Resuming.ToString())
                             {
+                                host.Status = $"resuming to {host.AdaptiveCruiseDesiredMph} mph";
+                                host.DrivingStatus = DrivingStatus.Resuming.ToString();
                                 if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(host.ToModel());
                             }
+                            this._gameScenario.Vehicles[host.Name] = host;
                         }
                     }
                     else
                     {
                         // no acceleration necessary
                         if (isHostStopped)
-                        {
-                            host.DrivingStatus = DrivingStatus.Stopped.ToString();
-                            host.Status = $"stopped by {lead.Name}";
-                            this._gameScenario.Vehicles[host.Name] = host;
+                        {                            
                             if (host.DrivingStatus != DrivingStatus.Stopped.ToString())
                             {
+                                host.DrivingStatus = DrivingStatus.Stopped.ToString();
+                                host.Status = $"stopped by {lead.Name}";
                                 if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(host.ToModel());
                             }
+                            this._gameScenario.Vehicles[host.Name] = host;
                         }
                         else if (isHostApproaching)
                         {
                             // host is approaching
-                            host.DrivingStatus = DrivingStatus.Approaching.ToString();
-                            host.Status = $"approaching {lead.Name}";
-                            this._gameScenario.Vehicles[host.Name] = host;
                             if (host.DrivingStatus != DrivingStatus.Approaching.ToString())
                             {
+                                host.DrivingStatus = DrivingStatus.Approaching.ToString();
+                                host.Status = $"approaching {lead.Name}";
                                 if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(host.ToModel());
                             }
+                            this._gameScenario.Vehicles[host.Name] = host;
                         }
                         else if (isHostTailing)
                         {
                             // host is tailing
-                            host.DrivingStatus = DrivingStatus.Tailing.ToString();
-                            host.Status = $"tailing {lead.Name}";
-                            this._gameScenario.Vehicles[host.Name] = host;
                             if (host.DrivingStatus != DrivingStatus.Tailing.ToString())
                             {
+                                host.DrivingStatus = DrivingStatus.Tailing.ToString();
+                                host.Status = $"tailing {lead.Name}";
                                 if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(host.ToModel());
                             }
+                            this._gameScenario.Vehicles[host.Name] = host;
                         }
                     }
                 }
             }
             else
             {
+                // no vehicles in front of host
+                if (isHostStopped)
+                {
+                    if (host.DrivingStatus != DrivingStatus.Stopped.ToString())
+                    {
+                        host.DrivingStatus = DrivingStatus.Stopped.ToString();
+                        host.Status = $"stopped";
+                        if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(host.ToModel());
+                    }
+                    this._gameScenario.Vehicles[host.Name] = host;
+                }
                 // no lead cars in radar range
-                if (!isHostGoingDesiredMph)
+                else if (!host.IsGoingDesiredMph)
                 {
                     // accelerating to desired speed
-                    host.Mph += this._constants.VEHICLE_MPH_ACCELERATION_RATE;
-                    host.Status = $"resuming to {host.AdaptiveCruiseMph} mph";
-                    host.DrivingStatus = DrivingStatus.Resuming.ToString();
-                    this._gameScenario.Vehicles[host.Name] = host;
+                    host.AddMph(this._constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE, isHumanInitiating:false);
                     if (host.DrivingStatus != DrivingStatus.Resuming.ToString())
                     {
+                        host.Status = $"resuming to {host.AdaptiveCruiseDesiredMph} mph";
+                        host.DrivingStatus = DrivingStatus.Resuming.ToString();
                         if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(host.ToModel());
                     }
+                    this._gameScenario.Vehicles[host.Name] = host;
                 }
-                else if (isHostGoingDesiredMph)
+                else if (host.IsGoingDesiredMph)
                 {
                     // vehicle returned to normal cruise speed
-                    host.Status = $"cruising at {host.AdaptiveCruiseMph} mph";
-                    host.DrivingStatus = DrivingStatus.Cruising.ToString();
-                    this._gameScenario.Vehicles[host.Name] = host;
                     if (host.DrivingStatus != DrivingStatus.Cruising.ToString())
                     {
+                        host.Status = $"cruising at {host.AdaptiveCruiseDesiredMph} mph";
+                        host.DrivingStatus = DrivingStatus.Cruising.ToString();
                         if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(host.ToModel());
                     }
+                    this._gameScenario.Vehicles[host.Name] = host;
                 }
             }
         }       
@@ -760,7 +830,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                 // SAVE THE CAR!!!!
                 var fastestCarInRadarRange = carsInRadarRange.OrderByDescending(x => x.Value.Mph).First().Value;
                 this._gameScenario.Vehicles[fastestCarInRadarRange.Name].AdaptiveCruiseOn = true;
-                this._gameScenario.Vehicles[fastestCarInRadarRange.Name].AdaptiveCruiseMph = fastestCarInRadarRange.Mph;
+                this._gameScenario.Vehicles[fastestCarInRadarRange.Name].AdaptiveCruiseDesiredMph = fastestCarInRadarRange.Mph;
                 var tamedVerb = this._terms.GetRandomTerm(TermList.Tamed);
                 this._gameScenario.Vehicles[fastestCarInRadarRange.Name].Status = $"{tamedVerb} by {vehicle.Name}";
                 this._gameScenario.Vehicles[fastestCarInRadarRange.Name].DrivingStatus = DrivingStatus.Cruising.ToString();
@@ -800,6 +870,14 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
         private async Task BroadcastGameReset()
         {
             await _hub.Clients.All.SendAsync("GameReset");
+        }
+        private async Task BroadcastGameLost()
+        {
+            await _hub.Clients.All.SendAsync("GameLost");
+        }
+        private async Task BroadcastGameWon()
+        {
+            await _hub.Clients.All.SendAsync("GameWon");
         }
 
         #endregion
@@ -869,8 +947,10 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
 				_GameStateLock.Release();
 			}
 		}
-		public async Task Reset()
+		public async Task Reset(string level)
 		{
+            GameLevel gameLevel = GameLevel.Level1;
+            Enum.TryParse(level, out gameLevel);
 			await _GameStateLock.WaitAsync();
 			try
 			{
@@ -879,7 +959,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                     throw new InvalidOperationException("Game must be closed before it can be reset.");
                 }
 
-                LoadGame();
+                LoadGame(gameLevel);
 				await BroadcastGameReset();
 			}
 			finally

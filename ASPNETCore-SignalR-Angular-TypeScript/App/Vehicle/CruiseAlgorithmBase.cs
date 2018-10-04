@@ -112,7 +112,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             {
                 return 0;
             }
-            var isHostGoingDesiredMph = host.AdaptiveCruiseMph == host.Mph || host.AdaptiveCruiseMph == 0;
+            var isHostGoingDesiredMph = host.AdaptiveCruiseDesiredMph == host.Mph || host.AdaptiveCruiseDesiredMph == 0;
             if (isHostGoingDesiredMph)
             {
                 return 0;
@@ -127,7 +127,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             if (lead.Mph > host.Mph)
             {
                 // lead is accelerating faster than host, no need to brake
-                return _constants.VEHICLE_MPH_ACCELERATION_RATE;
+                return _constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE;
                 
             }
             else if (lead.Mph == 0)
@@ -136,7 +136,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
                 var safeStoppingDistance = this._constants.safeStoppingCellDistances[host.Mph - lead.Mph];
                 if (cellDistance > safeStoppingDistance * safeDistanceMultiplier)
                 {
-                    return _constants.VEHICLE_MPH_ACCELERATION_RATE;
+                    return _constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE;
                 }
             }
             else
@@ -145,7 +145,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
                 var safeTailingCellDistance = this._constants.safeTailingCellDistances[Math.Abs(hostSpeedDifferenceFromLead)];
                 if (cellDistance > safeTailingCellDistance * safeDistanceMultiplier)
                 {
-                    return _constants.VEHICLE_MPH_ACCELERATION_RATE;
+                    return _constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE;
                 }
             }
             return 0;

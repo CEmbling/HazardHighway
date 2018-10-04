@@ -41,7 +41,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             vehicles.ForEach(v => v.DrivingStatus = v.AdaptiveCruiseOn ? DrivingStatus.Cruising.ToString() : DrivingStatus.Driving.ToString());
             return vehicles;
         }
-        public static List<Vehicle> GetTrainingVehicles(Constants constants, Terminology terms)
+        public static List<Vehicle> GetVehiclesForTestingStopping(Constants constants, Terminology terms)
         {
             var vehicles = new List<Vehicle>
             {

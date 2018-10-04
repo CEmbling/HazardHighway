@@ -9,6 +9,8 @@ export class gameSignalRService {
   gameOpened = new EventEmitter<Boolean>();
   gameClosed = new EventEmitter<Boolean>();
   gameReset = new EventEmitter<Boolean>();
+  gameWon = new EventEmitter<Boolean>();
+  gameLost = new EventEmitter<Boolean>();
   gameLoopBenchmark = new EventEmitter<number>();
   gameLoopVehicles = new EventEmitter<any>();
 
@@ -57,13 +59,22 @@ export class gameSignalRService {
       this.gameReset.emit(true);
     });
 
+    this._gameHubConnection.on("gameWon", () => {
+      console.log("gameWon");
+      this.gameWon.emit(true);
+    });
+
+    this._gameHubConnection.on("gameLost", () => {
+      console.log("gameLost");
+      this.gameLost.emit(true);
+    });
+
     this._gameHubConnection.on("gameLoopBenchmark",(gameLoopInMilliseconds:number) => {
       this.gameLoopBenchmark.emit(gameLoopInMilliseconds);
     });
 
     this._gameHubConnection.on("gameLoopVehicles", (gameLoopVehicles: any) => {
-      console.log('received vehicles from game loop: ')
-      console.log(gameLoopVehicles);
+      //console.log('received vehicles from game loop: ')
       this.gameLoopVehicles.emit(gameLoopVehicles);
     });
   }
@@ -84,8 +95,8 @@ export class gameSignalRService {
     this._gameHubConnection.invoke("CloseGame");
   }
 
-  public resetGame() {
-    this._gameHubConnection.invoke("Reset");
+  public resetGame(gameLevel:string) {
+    this._gameHubConnection.invoke("Reset", gameLevel);
   }
 
   public toggleAdaptiveCruise(){

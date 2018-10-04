@@ -11,12 +11,20 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
         #region private members
 
         private Constants _constants;
-        private IBrakingAlgorithm _brakingAlgorithm;
+        private ICruiseAlgorithm _brakingAlgorithm;
 
         #endregion
 
         public string Name { get; set; }
-        public int Mph { get; set; }
+        public int Mph { get; private set; }
+        public bool IsGoingDesiredMph
+        {
+            get
+            {
+                return this.AdaptiveCruiseDesiredMph == 0 ||
+                    this.AdaptiveCruiseDesiredMph == this.Mph;
+            }
+        }
         public int X { get; set; }
         public int FrontBumper { get { return X + 2; } }
         public int RearBumper { get { return X - 2; } }
@@ -25,7 +33,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
         public string DrivingAdjective { get; set; } = "";
         public string Status { get; set; } = "";
         public bool AdaptiveCruiseOn { get; set; }
-        public int AdaptiveCruiseMph { get; set; }
+        public int AdaptiveCruiseDesiredMph { get; set; }
         public bool AdaptiveCruiseFrontRadarIndicator { get; set; }
         public int AdaptiveCruisePreferredLeadNoOfCells { get; set; } = 4;
         public int Points { get; set; }
@@ -37,7 +45,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
 
         #region constructor
 
-        public Vehicle(Constants constants, IBrakingAlgorithm brakingAlgorithm)
+        public Vehicle(Constants constants, ICruiseAlgorithm brakingAlgorithm)
         {
             this._constants = constants;
             this._brakingAlgorithm = brakingAlgorithm;
@@ -106,7 +114,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
                 DrivingStatus = this.DrivingStatus,
                 AdaptiveCruiseOn = this.AdaptiveCruiseOn,
                 AdaptiveCruiseFrontRadarIndicator = this.AdaptiveCruiseFrontRadarIndicator,
-                AdaptiveCruiseMph = this.AdaptiveCruiseMph,
+                AdaptiveCruiseMph = this.AdaptiveCruiseDesiredMph,
                 AdaptiveCruisePreferredLeadNoOfCells = this.AdaptiveCruisePreferredLeadNoOfCells,
                 Mph = this.Mph,
                 Points = this.Points,
@@ -114,12 +122,51 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             };
         }
 
+        public void AddMph(int accelerationMph, bool isHumanInitiating)
+        {
+            if (this.Mph + accelerationMph > this._constants.VEHICLE_MPH_MAX_ACCELERATION)
+            {
+                return;
+            }
+            if (isHumanInitiating)
+            {
+                this.Mph += accelerationMph;
+            }
+            else if (this.AdaptiveCruiseDesiredMph > this.Mph)
+            {
+                this.Mph += accelerationMph;
+            }
+        }
+        public void SubtractMph(int brakeMph)
+        {
+            if (brakeMph <= 0)
+                return;
+            if(this.Mph - brakeMph < 0)
+            {
+                return;
+            }
+            this.Mph -= brakeMph;
+        }
+
+        internal void UpdateMph(int mph)
+        {
+            if (mph > this._constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE)
+            {
+                return;
+            }
+            if (mph < 0)
+            {
+                return;
+            }
+            this.Mph = mph;
+        }
+
         public static class Factory
         {
             public static Vehicle Create(string name, int mph, int x, int y, bool adaptiveCruiseOn)
             {
                 Constants constants = new Constants();
-                return new Vehicle(constants, new BrakingAlgorithm(constants))
+                return new Vehicle(constants, new CruiseAlgorithm(constants))
                 {
                     Name = name,
                     Mph = mph,

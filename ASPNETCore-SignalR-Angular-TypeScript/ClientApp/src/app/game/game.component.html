@@ -2,9 +2,14 @@
   <h1>Hazard Highway - the Game!</h1>
   <button name="opengame" class="btn btn-primary" (click)="openGameClicked()" [disabled]="gameStatus == 'open'">Start Game</button>
   <button name="" class="btn btn-danger" (click)="closeGameClicked()" [disabled]="gameStatus == 'closed' || gameStatus == ''">Stop Game</button>
-  <button name="" class="btn btn-default" (click)="resetClicked()"  [disabled]="!gameStatus == 'closed'">Reset</button>
+  <button name="" class="btn btn-default" (click)="resetClicked()" [disabled]="!gameStatus == 'closed'">Reset</button>
   <button name="" class="btn btn-default" (click)="toggleAdaptiveCruise()">Cruise Control</button>&nbsp;
-   Vehicle Count : {{vehicles.length}} Game Status : {{gameStatus}} Points: {{player1Vehicle.points}} Game Loop: {{gameLoopInMilliseconds}}
+  <button name="" class="btn btn-default" (click)="levelClick(1)">Level 1</button>&nbsp;
+  <button name="" class="btn btn-default" (click)="levelClick(2)">Level 2</button>&nbsp;
+  <button name="" class="btn btn-default" (click)="levelClick(3)">Level 3</button>&nbsp;
+  <button name="" class="btn btn-default" (click)="levelClick(4)">Level 4</button>&nbsp;
+  {{this.gameLevel}}
+  Vehicle Count : {{vehicles.length}} Game Status : {{gameStatus}} Points: {{player1Vehicle.points}} Game Loop: {{gameLoopInMilliseconds}}
 </div>
 
 <div id="hero" class="hero">

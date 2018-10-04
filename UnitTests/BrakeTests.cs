@@ -5,7 +5,7 @@ using System;
 namespace UnitTests
 {
     [TestClass]
-    public class Braking
+    public class BrakeTests
     {
 
         [TestMethod]
@@ -28,7 +28,7 @@ namespace UnitTests
         [DataRow(90, 0, 0, 494)]
         [DataRow(95, 0, 0, 545)]
         [DataRow(100, 0, 0, 598)]
-        public void When_Approaching_Stopped_Lead_Host_Host_ShouldBrake(int hostMph, int hostX, int leadCarMph, int leadCarX)
+        public void BrakeTest_When_Host_Approaching_Stopped_Lead_Host_Should_Brake(int hostMph, int hostX, int leadCarMph, int leadCarX)
         {
             double updateIntervalTotalMilliseconds = 250;
             Constants constants = new Constants();
@@ -58,7 +58,7 @@ namespace UnitTests
         [DataRow(90, 0, 0, 494 * 2)]
         [DataRow(95, 0, 0, 545 * 2)]
         [DataRow(100, 0, 0, 598 * 2)]
-        public void When_Approaching_Stopped_Lead_Host_Host_ShouldNotBrake(int hostMph, int hostX, int leadCarMph, int leadCarX)
+        public void BrakeTest_When_Host_Approaching_Stopped_Lead_Host_Host_ShouldNotBrake(int hostMph, int hostX, int leadCarMph, int leadCarX)
         {
             double updateIntervalTotalMilliseconds = 250;
             Constants constants = new Constants();
@@ -88,7 +88,7 @@ namespace UnitTests
         [DataRow(90, 0, 90, 494 - 2)]
         [DataRow(95, 0, 95, 545 - 2)]
         [DataRow(100, 0, 100, 598 - 2)]
-        public void When_Tailing_Lead_TooClose_Host_Host_ShouldBrake(int hostMph, int hostX, int leadCarMph, int leadCarX)
+        public void BrakeTest_When_Host_Tailing_Lead_Too_Close_Host_Should_Brake(int hostMph, int hostX, int leadCarMph, int leadCarX)
         {
             double updateIntervalTotalMilliseconds = 250;
             Constants constants = new Constants();
@@ -118,7 +118,7 @@ namespace UnitTests
         [DataRow(90, 0, 90, 494)]
         [DataRow(95, 0, 95, 545)]
         [DataRow(100, 0, 100, 598)]
-        public void When_Approaching_Moving_Lead_Host_Host_ShouldBrake(int hostMph, int hostX, int leadCarMph, int leadCarX)
+        public void BrakeTest_When_Host_Approaching_Moving_Lead_Host_Should_Brake(int hostMph, int hostX, int leadCarMph, int leadCarX)
         {
             double updateIntervalTotalMilliseconds = 250;
             Constants constants = new Constants();
@@ -148,7 +148,7 @@ namespace UnitTests
         [DataRow(90, 0, 0, 494 * 2)]
         [DataRow(95, 0, 0, 545 * 2)]
         [DataRow(100, 0, 0, 598 * 2)]
-        public void When_Approaching_Moving_Lead_Host_Host_ShouldNotBrake(int hostMph, int hostX, int leadCarMph, int leadCarX)
+        public void BrakeTest_When_Host_Approaching_Moving_Lead_Host_Should_Not_Brake(int hostMph, int hostX, int leadCarMph, int leadCarX)
         {
             double updateIntervalTotalMilliseconds = 250;
             Constants constants = new Constants();

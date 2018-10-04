@@ -13,7 +13,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
         IObservable<VehicleModel> StreamVehicles();
         Task OpenGame();
         Task CloseGame();
-        Task Reset();
+        Task Reset(string gameLevel);
         Task ToggleAdaptiveCruise();
         Task TurnLeft();
         Task TurnRight();

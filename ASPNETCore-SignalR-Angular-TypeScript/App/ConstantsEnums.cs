@@ -16,7 +16,8 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
         public int VEHICLECELLLENGTH { get => 5; }
         public int RADARINDICATORRANGE { get => 600; }
         // accelerating
-        public int VEHICLE_MPH_ACCELERATION_RATE { get => 5; }
+        public int VEHICLE_MPH_MAX_ACCELERATION { get => 100; }
+        public int VEHICLE_MPH_ACCELERATION_INCREMENT_RATE { get => 5; }
         // braking
         public int RADARBRAKERANGE { get => 8; } // will be multipled by vehicle's cellsTraveledPerInterval value
         public int POINTSPERVEHICLESAVED { get => 1000; }
@@ -42,9 +43,9 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             {50, 172},
             {55, 207},
             {60, 239},
-            {65,  275},
+            {65, 275},
             {70, 315},
-            {75,  356},
+            {75, 356},
             {80, 400},
             {85, 446},
             {90, 494},
@@ -85,7 +86,8 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
     {
         Level1,
         Level2,
-        Level3 
+        Level3,
+        Level4
     }
     public enum VehicleAction
     {

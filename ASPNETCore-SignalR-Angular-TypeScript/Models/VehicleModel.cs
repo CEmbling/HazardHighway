@@ -36,7 +36,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.Models
                     DrivingStatus = v.DrivingStatus,
                     AdaptiveCruiseOn = v.AdaptiveCruiseOn,
                     AdaptiveCruiseFrontRadarIndicator = v.AdaptiveCruiseFrontRadarIndicator,
-                    AdaptiveCruiseMph = v.AdaptiveCruiseMph,
+                    AdaptiveCruiseMph = v.AdaptiveCruiseDesiredMph,
                     AdaptiveCruisePreferredLeadNoOfCells = v.AdaptiveCruisePreferredLeadNoOfCells,
                     Mph = v.Mph,
                     Points = v.Points,

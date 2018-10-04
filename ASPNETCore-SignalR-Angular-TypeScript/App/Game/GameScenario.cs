@@ -23,16 +23,22 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
                 {
                     case GameLevel.Level1:
                     default: // level 1
-                        vehicles = VehicleFactory.GetTrainingVehicles(constants, terms);
+                        vehicles = VehicleFactory.GetVehicles(constants, terms);
                         scenario.EndX = 5000;
                         break;
                     case GameLevel.Level2:
                         vehicles = VehicleFactory.GetVehicles(constants, terms);
-                        scenario.EndX = 5000;
+                        vehicles.ForEach(vehicle => vehicle.AddMph(vehicle.Mph > 0 ? 25 : 0, true));
+                        scenario.EndX = 3600;
                         break;
                     case GameLevel.Level3:
-                        vehicles = VehicleFactory.GetVehicles(constants, terms);
-                        scenario.EndX = 3600;
+                        vehicles = VehicleFactory.GetVehiclesForTestingStopping(constants, terms);
+                        scenario.EndX = 5000;
+                        break;
+                    case GameLevel.Level4:
+                        vehicles = VehicleFactory.GetVehiclesForTestingStopping(constants, terms);
+                        vehicles.ForEach(vehicle => vehicle.AddMph(vehicle.Mph > 0 ? 25 : 0, true));
+                        scenario.EndX = 5000;
                         break;
                 }
                 

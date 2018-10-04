@@ -6,9 +6,9 @@ using ASPNETCore_SignalR_Angular_TypeScript.Models;
 
 namespace ASPNETCore_SignalR_Angular_TypeScript.App
 {
-    public class BrakingAlgorithm : BrakingAlgorithmBase, IBrakingAlgorithm
+    public class CruiseAlgorithm : BrakingAlgorithmBase, ICruiseAlgorithm
     {
-        public BrakingAlgorithm(Constants constants): base(constants)
+        public CruiseAlgorithm(Constants constants): base(constants)
         {
 
         }

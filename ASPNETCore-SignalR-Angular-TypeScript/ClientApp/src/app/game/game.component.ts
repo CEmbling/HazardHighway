@@ -24,6 +24,7 @@ export class GameComponent {
   vehiclesStream = []; // gets updated during game cycle
   player1Vehicle:Vehicle;
   gameStatus: string = "reset";
+  gameLevel: string = "Level1";
   public lanes = [1,2,3,4,5,6,7,8];
   public rows = [];
   public highwayRows:HighwayRow[] = [];
@@ -41,7 +42,8 @@ export class GameComponent {
     //subscribe for connection establish
     //fetch the vehicles details
     gameService.connectionEstablished.subscribe(() => {
-      this.initVehicles();
+      this.resetGame();
+      //this.initVehicles();
     });
 
     //subscribe for game open event
@@ -61,16 +63,22 @@ export class GameComponent {
       this.gameStatus = "reset";
       this.alert = "Game reset.";
       this.initVehicles();
-      this.gameService.openGame();
     });
 
-    //subscribe for game close event
+    //subscribe for game won event
+    gameService.gameWon.subscribe(() => {
+      alert('you won!!!');
+    });
+
+    //subscribe for game loss event
+    gameService.gameLost.subscribe(() => {
+      alert('you lost. Keep practicing & try again!');
+    });
+
+    //subscribe for game loop events
     gameService.gameLoopBenchmark.subscribe((gameLoopInMilliseconds: number) => {
       this.gameLoopInMilliseconds = gameLoopInMilliseconds;
-      //this.vehicles = this.vehicleUpdates.slice(0);
-      //this.renderHwy();
     });
-
     gameService.gameLoopVehicles.subscribe((gameLoopVehicles: any) => {
       let gameLoopVehiclesArray: Array<Vehicle> = gameLoopVehicles as Array<Vehicle>;
       for (var i = 0, len = gameLoopVehiclesArray.length; i < len; i++) {
@@ -86,10 +94,6 @@ export class GameComponent {
       this.vehiclesStream = data;
       this.renderHwy();
     });
-  }
-
-  openGameClicked() {
-    this.gameService.openGame();
   }
 
   startStreaming() {
@@ -127,21 +131,27 @@ export class GameComponent {
     }
   }
 
+  openGameClicked() {
+    this.gameService.openGame();
+  }
   closeGameClicked() {
     this.gameService.closeGame();
   }
 
   resetClicked() {
+    this.resetGame();
+  }
+  resetGame() {
     this.alert = "";
     this.rows = [];
-    this.gameService.resetGame();
     this.renderHwy();
+    this.gameService.resetGame(this.gameLevel);
   }
 
   playAgainClicked() {
     this.alert = "";
     this.rows = [];
-    this.gameService.resetGame();
+    this.gameService.resetGame(this.gameLevel);
   }
 
 
@@ -186,6 +196,9 @@ export class GameComponent {
 
   toggleAdaptiveCruise(){
     this.gameService.toggleAdaptiveCruise();
+  }
+  levelClick(level:number) {
+    this.gameLevel = "Level" + level;
   }
 
   // ***** ALL RENDERING ***********

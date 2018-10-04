@@ -21,7 +21,9 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.Hubs
 			this._game = game;
 		}
 
-		public IEnumerable<VehicleModel> GetAllVehicles()
+        #region queries
+
+        public IEnumerable<VehicleModel> GetAllVehicles()
 		{
 			return _game.GetAllVehicles();
 		}
@@ -31,12 +33,17 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.Hubs
 			return _game.StreamVehicles().AsChannelReader(10);
 		}
 
-		public string GetGameState()
-		{
-			return _game.GameState.ToString();
-		}
+        public string GetGameState()
+        {
+            return _game.GameState.ToString();
+        }
 
-		public async Task OpenGame()
+        #endregion
+
+
+        #region commands
+
+        public async Task OpenGame()
 		{
 			await _game.OpenGame();
 		}
@@ -46,9 +53,9 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.Hubs
 			await _game.CloseGame();
 		}
 
-		public async Task Reset()
+		public async Task Reset(string level)
 		{
-			await _game.Reset();
+			await _game.Reset(level);
 		}
 
         public async Task ToggleAdaptiveCruise()
@@ -75,6 +82,8 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.Hubs
         {
             await _game.DecreaseSpeed();
         }
+
+        #endregion
 
     }
 }
