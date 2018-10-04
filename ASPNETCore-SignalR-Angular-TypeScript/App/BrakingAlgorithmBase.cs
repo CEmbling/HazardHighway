@@ -58,8 +58,9 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             var cellClosurePerInterval = Math.Abs(lead.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds) - host.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds));
             var cellDistance = lead.RearBumper - host.FrontBumper;
             var intervalsToCollision = this.CalculateCrashCellDistance(cellDistance, cellClosurePerInterval);
-            //var safeIntervalsToBrake = intervalsToCollision + 1;
-            double safeIntervalsToFollow = 2;  // 1.2, 1.4, 1.6
+
+            // WARNING: never match or exceed acceleration safeDistanceMultiplier
+            double safeDistanceMultiplier = 1.6;  // 1.2, 1.4, 1.6 
             var hostSpeedDifferenceFromLead = lead.Mph - host.Mph;
 
             if (lead.Mph > host.Mph)
@@ -71,7 +72,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             {
                 // lead is stopped; host is approaching
                 var safeStoppingDistance = this._constants.safeStoppingCellDistances[host.Mph - lead.Mph];
-                if (cellDistance <= safeStoppingDistance + safeIntervalsToFollow)
+                if (cellDistance <= safeStoppingDistance * safeDistanceMultiplier)
                 {
                     return _constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE;
                 }
@@ -80,22 +81,27 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             {
                 // host is approaching moving lead
                 var safeTailingCellDistance = this._constants.safeTailingCellDistances[Math.Abs(hostSpeedDifferenceFromLead)];
-                if(cellDistance < safeTailingCellDistance)
+                if(cellDistance < safeTailingCellDistance * safeDistanceMultiplier)
                 {
                     return _constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE;
                 }
 
-                //// predict where host & lead will be next interval, if it's too close, brake this interval
-                //// driver prefers: 
-                ////      approaching to match speed and safe tailing distance vs.
-                ////      approaching too close, braking and then acceleration to match speed and safe tailing distance
-                //var cellDistancePredictedNextInterval = lead.RearBumper + lead.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds) - (host.FrontBumper + host.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds));
-                //var intervalsToCollisionPredictedNextInterval = this.CalculateCrashCellDistance(cellDistance, cellClosurePerInterval);
-                //if ((intervalsToCollision < safeIntervalsToFollow || intervalsToCollisionPredictedNextInterval < safeIntervalsToFollow) &&
-                //    Math.Abs(hostSpeedDifferenceFromLead) > 5)
-                //{
-                //    return _constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE;
-                //}
+                // predict where host & lead will be next interval, if it's too close, brake this interval
+                // driver prefers: 
+                //      approaching to match speed and safe tailing distance vs.
+                //      approaching too close, braking and then acceleration to match speed and safe tailing distance
+                var cellDistancePredictedNextInterval = lead.RearBumper + lead.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds) - (host.FrontBumper + host.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds));
+                if (cellDistancePredictedNextInterval < safeTailingCellDistance * safeDistanceMultiplier)
+                {
+                    return _constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE;
+                }
+
+                // safety prediction check
+                var intervalsToCollisionPredictedNextInterval = this.CalculateCrashCellDistance(cellDistance, cellClosurePerInterval);
+                if ((intervalsToCollisionPredictedNextInterval == 1))
+                {
+                    return _constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE;
+                }
             }
             return 0;
         }
@@ -115,7 +121,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
 
             var cellClosurePerInterval = Math.Abs(lead.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds) - host.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds));
             var cellDistance = lead.RearBumper - host.FrontBumper;
-            double safeIntervalsToFollow = 2;  // 1.2, 1.4, 1.6
+            double safeDistanceMultiplier = 2;  // 1.2, 1.4, 1.6
             var hostSpeedDifferenceFromLead = lead.Mph - host.Mph;
 
             if (lead.Mph > host.Mph)
@@ -128,7 +134,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             {
                 // lead is stopped; host is approaching
                 var safeStoppingDistance = this._constants.safeStoppingCellDistances[host.Mph - lead.Mph];
-                if (cellDistance > safeStoppingDistance + safeIntervalsToFollow)
+                if (cellDistance > safeStoppingDistance * safeDistanceMultiplier)
                 {
                     return _constants.VEHICLE_MPH_ACCELERATION_RATE;
                 }
@@ -137,7 +143,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             {
                 // host is approaching moving lead
                 var safeTailingCellDistance = this._constants.safeTailingCellDistances[Math.Abs(hostSpeedDifferenceFromLead)];
-                if (cellDistance > safeTailingCellDistance + safeIntervalsToFollow)
+                if (cellDistance > safeTailingCellDistance * safeDistanceMultiplier)
                 {
                     return _constants.VEHICLE_MPH_ACCELERATION_RATE;
                 }
