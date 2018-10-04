@@ -148,19 +148,6 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             this.Mph -= brakeMph;
         }
 
-        internal void UpdateMph(int mph)
-        {
-            if (mph > this._constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE)
-            {
-                return;
-            }
-            if (mph < 0)
-            {
-                return;
-            }
-            this.Mph = mph;
-        }
-
         public static class Factory
         {
             public static Vehicle Create(string name, int mph, int x, int y, bool adaptiveCruiseOn)

@@ -351,9 +351,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
             switch (action.VehicleAction)
             {
                 case VehicleAction.IncreaseSpeed:
-                    if (vehicle.Mph + this._constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE > this._constants.VEHICLE_MPH_MAX_ACCELERATION)
-                        return false;
-                    if (TryUpdateVehicleMph(vehicle, vehicle.Mph + this._constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE))
+                    if (TryIncreaseVehicleMph(vehicle, this._constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE))
                     {
                         vehicle.DrivingStatus = DrivingStatus.Accelerating.ToString();
                         if (vehicle.AdaptiveCruiseOn)
@@ -364,9 +362,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                     }
                     break;
                 case VehicleAction.DecreaseSpeed:
-                    if (vehicle.Mph == 0)
-                        return false;
-                    if (TryUpdateVehicleMph(vehicle, vehicle.Mph - this._constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE))
+                    if (TryDecreaseVehicleMph(vehicle, this._constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE))
                     {
                         if (vehicle.Mph == 0)
                         {
@@ -435,12 +431,14 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
             vehicle.DrivingStatus = drivingStatus.ToString();
             return true;
         }
-        private bool TryUpdateVehicleMph(Vehicle vehicle, int mph)
+        private bool TryDecreaseVehicleMph(Vehicle vehicle, int mph)
         {
-            if (mph >= 0)
-            {
-                vehicle.UpdateMph(mph);
-            }
+            vehicle.SubtractMph(mph);
+            return true;
+        }
+        private bool TryIncreaseVehicleMph(Vehicle vehicle, int mph)
+        {
+            vehicle.AddMph(mph, isHumanInitiating:true);
             return true;
         }
         private async Task BroadcastAllVehiclesSubjects()
@@ -602,20 +600,19 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                     vehicle.Status = $"{crashAdverb} by {crashedIntoVehicle.Name}";
                     crashedIntoVehicle.Status = $"{crashAdverb} {vehicle.Name}";
                 }
-                if(crashedIntoVehicle.DrivingStatus != DrivingStatus.Crashed.ToString())
+                if (TryUpdateVehicleDrivingStatus(crashedIntoVehicle, DrivingStatus.Crashed))
                 {
-                    TryUpdateVehicleStatus(crashedIntoVehicle, crashedIntoVehicle.Status);
-                    if (TryUpdateVehicleDrivingStatus(crashedIntoVehicle, DrivingStatus.Crashed))
-                    {
-                        TryUpdateVehicleMph(crashedIntoVehicle, 0);
-                        if(this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(crashedIntoVehicle.ToModel());
-                    }
+                    TryDecreaseVehicleMph(crashedIntoVehicle, vehicle.Mph);
+                    if (this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(crashedIntoVehicle.ToModel());
+                }
+                if (crashedIntoVehicle.DrivingStatus != DrivingStatus.Crashed.ToString())
+                {
+                    TryUpdateVehicleStatus(crashedIntoVehicle, crashedIntoVehicle.Status);   
                 }
 
                 TryUpdateVehicleStatus(vehicle, vehicle.Status);
                 if (TryUpdateVehicleDrivingStatus(vehicle, DrivingStatus.Crashed))
                 {
-                    TryUpdateVehicleMph(vehicle, 0);
                     if(this._constants.allowSubjectNextInsideGameLoop) _subject.OnNext(vehicle.ToModel());
                 }
 
