@@ -79,7 +79,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             {
                 // host is approaching or tailing moving lead
                 var safeTailingCellDistance = this._constants.safeTailingCellDistances[host.Mph];
-                if (cellDistance < (safeTailingCellDistance * (Math.Abs(hostSpeedDifferenceFromLead == 0? 1 : hostSpeedDifferenceFromLead))))
+                if (cellDistance < (safeTailingCellDistance * (Math.Abs(hostSpeedDifferenceFromLead == 0? 1 : hostSpeedDifferenceFromLead/_constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE))))
                 {
                     return _constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE;
                 }
@@ -127,7 +127,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
                 // lead is stopped; host is approaching
                 var safeStoppingDistance = this._constants.safeStoppingCellDistances[host.Mph];
                 //if (cellDistance > (safeStoppingDistance * (safeDistanceMultiplier + Math.Abs(hostSpeedDifferenceFromLead))))
-                if (cellDistance > (safeStoppingDistance + 8 ))
+                if (cellDistance > (safeStoppingDistance + 5 ))
                 {
                     return _constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE;
                 }
@@ -136,7 +136,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             {
                 // host is approaching moving lead
                 var safeTailingCellDistance = this._constants.safeTailingCellDistances[Math.Abs(host.Mph)];
-                if (cellDistance > (safeTailingCellDistance * (8 + Math.Abs(hostSpeedDifferenceFromLead == 0? 1: hostSpeedDifferenceFromLead))))
+                if (cellDistance > (5 + safeTailingCellDistance * (Math.Abs(hostSpeedDifferenceFromLead == 0? 1: hostSpeedDifferenceFromLead/_constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE))))
                 {
                     return _constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE;
                 }
