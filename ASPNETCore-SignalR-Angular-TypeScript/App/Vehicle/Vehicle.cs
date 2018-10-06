@@ -111,6 +111,50 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             return cellsTravelledPerInterval;
         }
 
+        public void AddMph(int accelerationMph, bool isHumanInitiating)
+        {
+            if (this.Mph + accelerationMph > this._constants.VEHICLE_MPH_MAX_ACCELERATION)
+            {
+                return;
+            }
+
+            if (isHumanInitiating)
+            {
+                this.Mph += accelerationMph;
+                if (this.AdaptiveCruiseOn)
+                {
+                    this.AdaptiveCruiseDesiredMph += accelerationMph;
+                }
+            }
+            else
+            {
+                // speed increase caused by adaptive cruise resuming 
+                // make sure car doesn't accelerate past the desired mph
+                if (this.Mph < this.AdaptiveCruiseDesiredMph)
+                {
+                    this.Mph += accelerationMph;
+                }
+            }
+        }
+        public void AddAdaptiveCruiseMph(int mph)
+        {
+            if (this.AdaptiveCruiseDesiredMph + mph > this._constants.VEHICLE_MPH_MAX_ACCELERATION)
+            {
+                return;
+            }
+            this.AdaptiveCruiseDesiredMph += mph;
+        }
+        public void SubtractMph(int brakeMph)
+        {
+            if (brakeMph <= 0)
+                return;
+            if(this.Mph - brakeMph < 0)
+            {
+                return;
+            }
+            this.Mph -= brakeMph;
+        }
+
         public VehicleModel ToModel()
         {
             return new VehicleModel
@@ -131,30 +175,14 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             };
         }
 
-        public void AddMph(int accelerationMph, bool isHumanInitiating)
+        public void IncrementPositionChange(double intervalTotalMilliseconds)
         {
-            if (this.Mph + accelerationMph > this._constants.VEHICLE_MPH_MAX_ACCELERATION)
+            if (this.DrivingStatus == ASPNETCore_SignalR_Angular_TypeScript.App.DrivingStatus.Crashed.ToString())
             {
                 return;
             }
-            if (isHumanInitiating)
-            {
-                this.Mph += accelerationMph;
-            }
-            else if (this.AdaptiveCruiseDesiredMph > this.Mph)
-            {
-                this.Mph += accelerationMph;
-            }
-        }
-        public void SubtractMph(int brakeMph)
-        {
-            if (brakeMph <= 0)
-                return;
-            if(this.Mph - brakeMph < 0)
-            {
-                return;
-            }
-            this.Mph -= brakeMph;
+            int cellsTravelledPerInterval = this.CalculateCellsTravelledPerInterval(intervalTotalMilliseconds);
+            this.X += cellsTravelledPerInterval;
         }
 
         public static class Factory
@@ -169,19 +197,10 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
                     X = x,
                     Y = y,
                     AdaptiveCruiseOn = adaptiveCruiseOn,
+                    AdaptiveCruiseDesiredMph = adaptiveCruiseOn? mph : 0,
                     IsHazard = isHazard
                 };
             }
-        }
-
-        public void IncrementPositionChange(double intervalTotalMilliseconds)
-        {
-            if (this.DrivingStatus == ASPNETCore_SignalR_Angular_TypeScript.App.DrivingStatus.Crashed.ToString())
-            {
-                return;
-            }
-            int cellsTravelledPerInterval = this.CalculateCellsTravelledPerInterval(intervalTotalMilliseconds);
-            this.X += cellsTravelledPerInterval;
         }
     }
 }

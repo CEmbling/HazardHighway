@@ -76,7 +76,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
                 Vehicle.Factory.Create("Disabled Vehicle",  mph:0,  x:1000,   y:5, adaptiveCruiseOn: true, isHazard:true),
                 Vehicle.Factory.Create("Gawker 5",          mph:0,  x:1000,   y:6, adaptiveCruiseOn: true, isHazard:true),
                 Vehicle.Factory.Create("Gawker 6",          mph:0,  x:1000,   y:7, adaptiveCruiseOn: true, isHazard:true),
-                Vehicle.Factory.Create("Gawker 7",          mph:0,  x:3100,   y:8, adaptiveCruiseOn: true, isHazard:true),
+                Vehicle.Factory.Create("Gawker 7",          mph:0,  x:1000,   y:8, adaptiveCruiseOn: true, isHazard:true),
             };
 
             vehicles.ForEach(v => v.DrivingAdjective = v.AdaptiveCruiseOn ? terms.GetRandomTerm(TermList.Safe) : terms.GetRandomTerm(TermList.Unsafe));

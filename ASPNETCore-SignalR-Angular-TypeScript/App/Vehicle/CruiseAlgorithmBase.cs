@@ -59,8 +59,6 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             var cellDistance = lead.RearBumper - host.FrontBumper;
             var intervalsToCollision = this.CalculateCrashCellDistance(cellDistance, cellClosurePerInterval);
 
-            // WARNING: never match or exceed acceleration safeDistanceMultiplier
-            double safeDistanceMultiplier = 3;  // 1.2, 1.4, 1.6 
             var hostSpeedDifferenceFromLead = lead.Mph - host.Mph;
 
             if (lead.Mph > host.Mph)
@@ -72,7 +70,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             {
                 // lead is stopped; host is approaching
                 var safeStoppingDistance = this._constants.safeStoppingCellDistances[host.Mph];
-                if (cellDistance <= safeStoppingDistance * safeDistanceMultiplier)
+                if (cellDistance <= safeStoppingDistance)
                 {
                     return _constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE;
                 }
@@ -81,7 +79,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             {
                 // host is approaching or tailing moving lead
                 var safeTailingCellDistance = this._constants.safeTailingCellDistances[host.Mph];
-                if(cellDistance < (safeTailingCellDistance * (Math.Abs(hostSpeedDifferenceFromLead))))
+                if (cellDistance < (safeTailingCellDistance * (Math.Abs(hostSpeedDifferenceFromLead == 0? 1 : hostSpeedDifferenceFromLead))))
                 {
                     return _constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE;
                 }
@@ -127,8 +125,9 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             if (lead.Mph == 0)
             {
                 // lead is stopped; host is approaching
-                var safeStoppingDistance = this._constants.safeStoppingCellDistances[host.Mph - lead.Mph];
-                if (cellDistance > (safeStoppingDistance * (safeDistanceMultiplier + Math.Abs(hostSpeedDifferenceFromLead))))
+                var safeStoppingDistance = this._constants.safeStoppingCellDistances[host.Mph];
+                //if (cellDistance > (safeStoppingDistance * (safeDistanceMultiplier + Math.Abs(hostSpeedDifferenceFromLead))))
+                if (cellDistance > (safeStoppingDistance + 8 ))
                 {
                     return _constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE;
                 }
@@ -137,8 +136,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             {
                 // host is approaching moving lead
                 var safeTailingCellDistance = this._constants.safeTailingCellDistances[Math.Abs(host.Mph)];
-                //if (cellDistance > (safeTailingCellDistance * safeDistanceMultiplier))
-                if (cellDistance > (safeTailingCellDistance * (safeDistanceMultiplier + Math.Abs(hostSpeedDifferenceFromLead))))
+                if (cellDistance > (safeTailingCellDistance * (8 + Math.Abs(hostSpeedDifferenceFromLead == 0? 1: hostSpeedDifferenceFromLead))))
                 {
                     return _constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE;
                 }

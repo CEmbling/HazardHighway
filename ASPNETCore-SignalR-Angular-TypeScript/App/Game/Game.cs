@@ -280,14 +280,12 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
             if (gameWon)
             {
                 await CloseGame();
-                await Task.Delay(this._updateInterval * 2);
                 await BroadcastGameWon();
                 return;
             }
             else if (gameLost)
             {
                 await CloseGame();
-                await Task.Delay(this._updateInterval * 2);
                 await BroadcastGameLost();
                 return;
             }
