@@ -11,7 +11,8 @@ export class Vehicle{
     points:number;
     adaptiveCruiseFrontRadarIndicator:Boolean;
     leftBlindSpotIndicator:boolean;
-    rightBlindSpotIndicator:boolean;
+    rightBlindSpotIndicator: boolean;
+    isHazard: boolean;
     constructor(){
         this.mph = 0;
         this.x = 0;

@@ -25,7 +25,10 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.Hubs
 
         public IEnumerable<VehicleModel> GetAllVehicles()
 		{
-			return _game.GetAllVehicles();
+			return _game.GetAllVehicles()
+                .OrderByDescending(v => v.Name == "Player 1")
+                .ThenBy(v => v.IsHazard)
+                .ThenBy(v => v.Name);
 		}
 
 		public ChannelReader<VehicleModel> StreamVehicles()

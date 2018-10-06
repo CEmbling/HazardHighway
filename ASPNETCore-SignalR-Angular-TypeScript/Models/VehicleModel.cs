@@ -22,6 +22,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.Models
         public bool AdaptiveCruiseFrontRadarIndicator { get; set; }
         public int AdaptiveCruisePreferredLeadNoOfCells { get; set; } = 4;
         public int Points { get; set; }
+        public bool IsHazard { get; set; }
 
         public static class Factory
         {

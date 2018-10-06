@@ -239,6 +239,8 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
         }
         private async Task CheckForGameEnding()
         {
+            bool gameWon = false;
+            bool gameLost = false;
             // This function must be re-entrant as it's running as a timer interval handler
             await _VehiclePositionsLock.WaitAsync();
             try
@@ -250,7 +252,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                     var vehicleCount = this._gameScenario.Vehicles.Count();
 
                     // did player 1 crash?
-                    var gameLost = this._gameScenario.Vehicles
+                    gameLost = this._gameScenario.Vehicles
                                     .Where(v => v.Value.Name == _constants.PLAYER1
                                             && v.Value.DrivingStatus == DrivingStatus.Crashed.ToString())
                                     .Any();
@@ -262,34 +264,38 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                                     .Count() == vehicleCount;
 
                     // did all vehicles stop successfully?
-                    var gameWon = this._gameScenario.Vehicles
+                    gameWon = this._gameScenario.Vehicles
                                     .Where(v => v.Value.DrivingStatus == DrivingStatus.Stopped.ToString())
                                     .Count() == vehicleCount;
 
                     _updatingVehiclePositions = false;
-
-                    if (gameWon)
-                    {
-                        await CloseGame();
-                        await BroadcastGameWon();
-                        return;
-                    }
-                    else if(gameLost)
-                    {
-                        await CloseGame();
-                        await BroadcastGameLost();
-                        return;
-                    }
-                    else
-                    {
-                        // game still going
-                    }
                 }
             }
             finally
             {
                 _VehiclePositionsLock.Release();
             }
+
+
+            if (gameWon)
+            {
+                await CloseGame();
+                await Task.Delay(this._updateInterval * 2);
+                await BroadcastGameWon();
+                return;
+            }
+            else if (gameLost)
+            {
+                await CloseGame();
+                await Task.Delay(this._updateInterval * 2);
+                await BroadcastGameLost();
+                return;
+            }
+            else
+            {
+                // game still going
+            }
+
         }
         private async Task UpdateVehicleActions()
         {
@@ -333,12 +339,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
 
         private bool TryUpdateVehiclePosition(Vehicle vehicle)
         {
-            if (vehicle.DrivingStatus == DrivingStatus.Crashed.ToString())
-            {
-                return false;
-            }
-            int cellsTravelledPerInterval = vehicle.CalculateCellsTravelledPerInterval(this._updateInterval.TotalMilliseconds);
-            vehicle.X += cellsTravelledPerInterval;
+            vehicle.IncrementPositionChange(this._updateInterval.TotalMilliseconds);
 
             return true;
         }

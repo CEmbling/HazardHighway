@@ -43,7 +43,6 @@ export class GameComponent {
     //fetch the vehicles details
     gameService.connectionEstablished.subscribe(() => {
       this.resetGame();
-      //this.initVehicles();
     });
 
     //subscribe for game open event
@@ -67,12 +66,12 @@ export class GameComponent {
 
     //subscribe for game won event
     gameService.gameWon.subscribe(() => {
-      alert('you won!!!');
+      alert('You won the game and got the max points, ' + this.player1Vehicle.points + '!!! You desserve a new car!!');
     });
 
     //subscribe for game loss event
     gameService.gameLost.subscribe(() => {
-      alert('you lost. Keep practicing & try again!');
+      alert('Game over, you got ' + this.player1Vehicle.points + ' points. Keep practicing to get max points!');
     });
 
     //subscribe for game loop events
@@ -125,7 +124,7 @@ export class GameComponent {
   displayVehicleStream(vehicle) {
     //console.log("vehicle updated:" + vehicle.name);
     for (let i in this.vehiclesStream) {
-      if (this.vehiclesStream[i].name == vehicle.name) {
+      if (this.vehicles[i].name == vehicle.name && vehicle[i].isHazard == false) {
         this.vehiclesStream[i] = vehicle;
       }
     }

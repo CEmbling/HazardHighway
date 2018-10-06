@@ -13,11 +13,6 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
         {
             var vehicles = new List<Vehicle>
             {
-                // introduce hazards into the highway
-                Vehicle.Factory.Create("Gawker 1",          mph:0,  x:3100,   y:3, adaptiveCruiseOn: true),
-                Vehicle.Factory.Create("Disabled Vehicle",  mph:0,  x:3100,   y:5, adaptiveCruiseOn: true),
-                Vehicle.Factory.Create("Gawker 2",          mph:0,  x:3100,   y:7, adaptiveCruiseOn: true),
-
                 // left lane
                 Vehicle.Factory.Create("Toyota Prius",      mph:30, x: 5,   y: 3, adaptiveCruiseOn: false),
                 Vehicle.Factory.Create("Toyota Camry",      mph:30, x: 50,  y: 3, adaptiveCruiseOn: false),
@@ -35,6 +30,16 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
                 Vehicle.Factory.Create("Chevy Malibu",      mph:30, x:30, y:7, adaptiveCruiseOn: false),
                 Vehicle.Factory.Create("Chevy Taho",        mph:30, x:50, y:7, adaptiveCruiseOn: false),
                 Vehicle.Factory.Create("Cal's Pigeon",      mph:30, x:70, y:7, adaptiveCruiseOn: false),
+
+                // introduce hazards into the highway
+                Vehicle.Factory.Create("Gawker 1",          mph:0,  x:3100,   y:1, adaptiveCruiseOn: true, isHazard:true),
+                Vehicle.Factory.Create("Gawker 2",          mph:0,  x:3100,   y:2, adaptiveCruiseOn: true, isHazard:true),
+                Vehicle.Factory.Create("Gawker 3",          mph:0,  x:3100,   y:3, adaptiveCruiseOn: true, isHazard:true),
+                Vehicle.Factory.Create("Gawker 4",          mph:0,  x:3100,   y:4, adaptiveCruiseOn: true, isHazard:true),
+                Vehicle.Factory.Create("Disabled Vehicle",  mph:0,  x:3100,   y:5, adaptiveCruiseOn: true, isHazard:true),
+                Vehicle.Factory.Create("Gawker 5",          mph:0,  x:3100,   y:6, adaptiveCruiseOn: true, isHazard:true),
+                Vehicle.Factory.Create("Gawker 6",          mph:0,  x:3100,   y:7, adaptiveCruiseOn: true, isHazard:true),
+                Vehicle.Factory.Create("Gawker 7",          mph:0,  x:3100,   y:8, adaptiveCruiseOn: true, isHazard:true),
             };
 
             vehicles.ForEach(v => v.DrivingAdjective = v.AdaptiveCruiseOn ? terms.GetRandomTerm(TermList.Safe) : terms.GetRandomTerm(TermList.Unsafe));
@@ -64,9 +69,14 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
                 Vehicle.Factory.Create("Cal's Pigeon",      mph:30, x:70, y:7, adaptiveCruiseOn: true),
 
                 // introduce hazards into the highway
-                Vehicle.Factory.Create("Gawker 1",          mph:0,  x:1000,   y:3, adaptiveCruiseOn: true),
-                Vehicle.Factory.Create("Disabled Vehicle",  mph:0,  x:1000,   y:5, adaptiveCruiseOn: true),
-                Vehicle.Factory.Create("Gawker 2",          mph:0,  x:1000,   y:7, adaptiveCruiseOn: true),
+                Vehicle.Factory.Create("Gawker 1",          mph:0,  x:1000,   y:1, adaptiveCruiseOn: true, isHazard:true),
+                Vehicle.Factory.Create("Gawker 2",          mph:0,  x:1000,   y:2, adaptiveCruiseOn: true, isHazard:true),
+                Vehicle.Factory.Create("Gawker 3",          mph:0,  x:1000,   y:3, adaptiveCruiseOn: true, isHazard:true),
+                Vehicle.Factory.Create("Gawker 4",          mph:0,  x:1000,   y:4, adaptiveCruiseOn: true, isHazard:true),
+                Vehicle.Factory.Create("Disabled Vehicle",  mph:0,  x:1000,   y:5, adaptiveCruiseOn: true, isHazard:true),
+                Vehicle.Factory.Create("Gawker 5",          mph:0,  x:1000,   y:6, adaptiveCruiseOn: true, isHazard:true),
+                Vehicle.Factory.Create("Gawker 6",          mph:0,  x:1000,   y:7, adaptiveCruiseOn: true, isHazard:true),
+                Vehicle.Factory.Create("Gawker 7",          mph:0,  x:3100,   y:8, adaptiveCruiseOn: true, isHazard:true),
             };
 
             vehicles.ForEach(v => v.DrivingAdjective = v.AdaptiveCruiseOn ? terms.GetRandomTerm(TermList.Safe) : terms.GetRandomTerm(TermList.Unsafe));

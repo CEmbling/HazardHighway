@@ -42,6 +42,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
         public int NearRadarRange { get; set; } = 6;
         public int MidRadarRange { get; set; } = 400;
         public int FarRadarRange { get; set; } = 500;
+        public bool IsHazard { get; set; }
 
         #region constructor
 
@@ -75,30 +76,37 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             // 316,800 = 60 mph * 5280 ftpm
             var ftphr = this.Mph * _constants.FEETPERMILE;
 
-            // .044 = feet per millisecond  (30 mph)
-            // .051 = feet per millisecond  (35 mph)
-            // .088 = feet per millisecond  (60 mph)
+            // .044     = feet per millisecond  (30 mph)
+            // .051     = feet per millisecond  (35 mph)
+            // .088     = feet per millisecond  (60 mph)
             Double ftpms = Convert.ToDouble(Convert.ToDouble(ftphr) / Convert.ToDouble(3600000));
 
-            // 11 = feetTraveledPerInterval  (30 mph)
-            // 12.75 = feetTraveledPerInterval  (35 mph)
-            // 22 = feetTraveledPerInterval  (60 mph)
+            // 11       = feetTraveledPerInterval  (30 mph)
+            // 12.75    = feetTraveledPerInterval  (35 mph)
+            // 22       = feetTraveledPerInterval  (60 mph)
             Double feetTraveledPerInterval = Convert.ToDouble(ftpms * updateIntervalTotalMilliseconds);
 
             // 0        = cellsTravelledPerInterval  (00 mph)
-            // 6.375    = cellsTravelledPerInterval  (05 mph)
-            // 5.5      = cellsTravelledPerInterval  (10 mph)
-            // 6.375    = cellsTravelledPerInterval  (15 mph)
-            // 5.5      = cellsTravelledPerInterval  (20 mph)
-            // 6.375    = cellsTravelledPerInterval  (25 mph)
-            // 5.5      = cellsTravelledPerInterval  (30 mph)
-            // 6.375    = cellsTravelledPerInterval  (35 mph)
-            // 5.5      = cellsTravelledPerInterval  (40 mph)
-            // 6.375    = cellsTravelledPerInterval  (45 mph)
-            // 5.5      = cellsTravelledPerInterval  (50 mph)
-            // 6.375    = cellsTravelledPerInterval  (55 mph)
+            // 1.83     = cellsTravelledPerInterval  (05 mph)
+            // 3.6      = cellsTravelledPerInterval  (10 mph)
+            // 5.5      = cellsTravelledPerInterval  (15 mph)
+            // 7.3      = cellsTravelledPerInterval  (20 mph)
+            // 9.16     = cellsTravelledPerInterval  (25 mph)
+            // 11       = cellsTravelledPerInterval  (30 mph)
+            // 12.83    = cellsTravelledPerInterval  (35 mph)
+            // 14       = cellsTravelledPerInterval  (40 mph)
+            // 16.5     = cellsTravelledPerInterval  (45 mph)
+            // 18.3     = cellsTravelledPerInterval  (50 mph)
+            // 20.1     = cellsTravelledPerInterval  (55 mph)
             // 22       = cellsTravelledPerInterval  (60 mph)
-            // 6.375    = cellsTravelledPerInterval  (75 mph)
+            // 23.83    = cellsTravelledPerInterval  (65 mph)
+            // 25.667   = cellsTravelledPerInterval  (70 mph)
+            // 27.5     = cellsTravelledPerInterval  (75 mph)
+            // 29.333   = cellsTravelledPerInterval  (80 mph)
+            // 31.166   = cellsTravelledPerInterval  (85 mph)
+            // 33       = cellsTravelledPerInterval  (90 mph)
+            // 34.833   = cellsTravelledPerInterval  (95 mph)
+            // 36.667   = cellsTravelledPerInterval  (100 mph)
             int cellsTravelledPerInterval = Convert.ToInt32(feetTraveledPerInterval / _constants.FEETPERCELL);
             return cellsTravelledPerInterval;
         }
@@ -118,7 +126,8 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
                 AdaptiveCruisePreferredLeadNoOfCells = this.AdaptiveCruisePreferredLeadNoOfCells,
                 Mph = this.Mph,
                 Points = this.Points,
-                Status = this.Status
+                Status = this.Status,
+                IsHazard = this.IsHazard
             };
         }
 
@@ -150,7 +159,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
 
         public static class Factory
         {
-            public static Vehicle Create(string name, int mph, int x, int y, bool adaptiveCruiseOn)
+            public static Vehicle Create(string name, int mph, int x, int y, bool adaptiveCruiseOn, bool isHazard = false)
             {
                 Constants constants = new Constants();
                 return new Vehicle(constants, new CruiseAlgorithm(constants))
@@ -159,9 +168,20 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
                     Mph = mph,
                     X = x,
                     Y = y,
-                    AdaptiveCruiseOn = adaptiveCruiseOn
+                    AdaptiveCruiseOn = adaptiveCruiseOn,
+                    IsHazard = isHazard
                 };
             }
+        }
+
+        public void IncrementPositionChange(double intervalTotalMilliseconds)
+        {
+            if (this.DrivingStatus == ASPNETCore_SignalR_Angular_TypeScript.App.DrivingStatus.Crashed.ToString())
+            {
+                return;
+            }
+            int cellsTravelledPerInterval = this.CalculateCellsTravelledPerInterval(intervalTotalMilliseconds);
+            this.X += cellsTravelledPerInterval;
         }
     }
 }

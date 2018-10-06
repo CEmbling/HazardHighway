@@ -99,7 +99,7 @@ namespace UnitTests
         }
 
         [TestMethod]
-        [DataRow(5, 0, 5, 6)]
+        [DataRow(5, 0, 5, 32)]
         [DataRow(10, 0, 10, 15)]
         [DataRow(15, 0, 15, 15)]
         [DataRow(20, 0, 20, 15)]
@@ -118,7 +118,7 @@ namespace UnitTests
         [DataRow(90, 0, 90, 494)]
         [DataRow(95, 0, 95, 545)]
         [DataRow(100, 0, 100, 598)]
-        public void AccelerationTest_WhenHost_Tailing_Lead_That_Accelerates_Host_Should_Accelerate(int hostMph, int hostX, int leadCarMph, int leadCarX)
+        public void AccelerationTest_When_Host_Tailing_Lead_That_Accelerates_Host_Should_Accelerate(int hostMph, int hostX, int leadCarMph, int leadCarX)
         {
             double updateIntervalTotalMilliseconds = 250;
             Constants constants = new Constants();
