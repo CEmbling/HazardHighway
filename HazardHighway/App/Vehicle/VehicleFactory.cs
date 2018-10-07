@@ -20,7 +20,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
                 Vehicle.Factory.Create("Toyota Corolla",    mph:30, x: 150, y: 3, adaptiveCruiseOn: false, drivingStatus: DrivingStatus.Driving),               
 
                 // middle lane
-                Vehicle.Factory.Create(constants.PLAYER1,   mph:30, x: 0,   y: 5, adaptiveCruiseOn: false, drivingStatus: DrivingStatus.Driving),
+                Vehicle.Factory.Create(constants.PLAYER1,   mph:30, x: 0,   y: 5, adaptiveCruiseOn: true, drivingStatus: DrivingStatus.Driving),
                 Vehicle.Factory.Create("Ford Edge",         mph:30, x: 21,  y: 5, adaptiveCruiseOn: false, drivingStatus: DrivingStatus.Driving),
                 Vehicle.Factory.Create("Ford Explorer",     mph:30, x: 40,  y: 5, adaptiveCruiseOn: false, drivingStatus: DrivingStatus.Driving),
                 Vehicle.Factory.Create("Ford Escape",       mph:30, x: 160, y: 5, adaptiveCruiseOn: false, drivingStatus: DrivingStatus.Driving),
@@ -44,6 +44,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
 
             vehicles.ForEach(v => v.DrivingAdjective = v.AdaptiveCruiseOn ? terms.GetRandomTerm(TermList.Safe) : terms.GetRandomTerm(TermList.Unsafe));
             vehicles.ForEach(v => v.DrivingStatus = v.AdaptiveCruiseOn ? DrivingStatus.Cruising.ToString() : DrivingStatus.Driving.ToString());
+            vehicles.ForEach(v => v.DrivingStatus = v.Mph == 0 ? DrivingStatus.Stopped.ToString() : v.DrivingStatus);
             return vehicles;
         }
         public static List<Vehicle> GetVehiclesForTestingStopping(Constants constants, Terminology terms)

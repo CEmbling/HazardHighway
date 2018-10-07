@@ -23,7 +23,11 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
         }
         public int CalculateCellsTravelledPerInterval(int mph, double updateIntervalTotalMilliseconds)
         {
-            return this.CalculateCellsTravelledPerInterval(mph, updateIntervalTotalMilliseconds);
+            return base.CalculateCellsTravelledPerInterval(mph, updateIntervalTotalMilliseconds);
+        }
+        public int PredictCellDistanceAfterNumberOfIntevals(Vehicle lead, Vehicle host, int numberOfIntervals, double updateIntervalTotalMilliseconds)
+        {
+            return base.PredictCellDistanceAfterNumberOfIntevals(lead, host, numberOfIntervals, updateIntervalTotalMilliseconds);
         }
     }
 }

@@ -3215,7 +3215,7 @@
           "lib/netstandard1.3/System.Xml.XPath.XmlDocument.dll": {}
         }
       },
-      "ASPNETCore_SignalR_Angular_TypeScript/1.0.0": {
+      "HazardHighway/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v2.1",
         "dependencies": {
@@ -3224,10 +3224,10 @@
           "System.Reactive.Linq": "4.1.0"
         },
         "compile": {
-          "bin/placeholder/ASPNETCore_SignalR_Angular_TypeScript.dll": {}
+          "bin/placeholder/HazardHighway.dll": {}
         },
         "runtime": {
-          "bin/placeholder/ASPNETCore_SignalR_Angular_TypeScript.dll": {}
+          "bin/placeholder/HazardHighway.dll": {}
         }
       }
     }
@@ -9559,15 +9559,15 @@
         "system.xml.xpath.xmldocument.nuspec"
       ]
     },
-    "ASPNETCore_SignalR_Angular_TypeScript/1.0.0": {
+    "HazardHighway/1.0.0": {
       "type": "project",
-      "path": "../ASPNETCore-SignalR-Angular-TypeScript/ASPNETCore_SignalR_Angular_TypeScript.csproj",
-      "msbuildProject": "../ASPNETCore-SignalR-Angular-TypeScript/ASPNETCore_SignalR_Angular_TypeScript.csproj"
+      "path": "../HazardHighway/HazardHighway.csproj",
+      "msbuildProject": "../HazardHighway/HazardHighway.csproj"
     }
   },
   "projectFileDependencyGroups": {
     ".NETCoreApp,Version=v2.1": [
-      "ASPNETCore_SignalR_Angular_TypeScript >= 1.0.0",
+      "HazardHighway >= 1.0.0",
       "MSTest.TestAdapter >= 1.3.2",
       "MSTest.TestFramework >= 1.3.2",
       "Microsoft.NET.Test.Sdk >= 15.8.0",
@@ -9610,8 +9610,8 @@
       "frameworks": {
         "netcoreapp2.1": {
           "projectReferences": {
-            "C:\\Repos\\games\\HazardHighway\\ASPNETCore-SignalR-Angular-TypeScript\\ASPNETCore_SignalR_Angular_TypeScript.csproj": {
-              "projectPath": "C:\\Repos\\games\\HazardHighway\\ASPNETCore-SignalR-Angular-TypeScript\\ASPNETCore_SignalR_Angular_TypeScript.csproj"
+            "C:\\Repos\\games\\HazardHighway\\HazardHighway\\HazardHighway.csproj": {
+              "projectPath": "C:\\Repos\\games\\HazardHighway\\HazardHighway\\HazardHighway.csproj"
             }
           }
         }

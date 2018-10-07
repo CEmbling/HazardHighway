@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ASPNETCore-SignalR-Angular-TypeScript\ASPNETCore_SignalR_Angular_TypeScript.csproj" />
+    <ProjectReference Include="..\HazardHighway\HazardHighway.csproj" />
   </ItemGroup>
 
 </Project>

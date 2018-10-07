@@ -73,30 +73,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             {95, 76},
             {100, 80}
         };
-        public Dictionary<int, int> safeAccelerationCellDistances = new Dictionary<int, int>()
-        {
-            {0, 5},
-            {5, 8},
-            {10, 12},
-            {15, 16},
-            {20, 20},
-            {25, 24},
-            {30, 28},
-            {35, 32},
-            {40, 36},
-            {45, 40},
-            {50, 44},
-            {55, 48},
-            {60, 52},
-            {65, 56},
-            {70, 60},
-            {75, 64},
-            {80, 68},
-            {85, 72},
-            {90, 76},
-            {95, 80},
-            {100, 100}
-        };
+
     }
     public enum GameState
     {

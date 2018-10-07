@@ -8,7 +8,7 @@
     ".NETCoreApp,Version=v2.1": {
       "UnitTests/1.0.0": {
         "dependencies": {
-          "ASPNETCore_SignalR_Angular_TypeScript": "1.0.0",
+          "HazardHighway": "1.0.0",
           "MSTest.TestAdapter": "1.3.2",
           "MSTest.TestFramework": "1.3.2",
           "Microsoft.NET.Test.Sdk": "15.8.0"
@@ -2325,13 +2325,13 @@
           }
         }
       },
-      "ASPNETCore_SignalR_Angular_TypeScript/1.0.0": {
+      "HazardHighway/1.0.0": {
         "dependencies": {
           "Microsoft.AspNetCore.SpaServices.Extensions": "2.1.1",
           "System.Reactive.Linq": "4.1.0"
         },
         "runtime": {
-          "ASPNETCore_SignalR_Angular_TypeScript.dll": {}
+          "HazardHighway.dll": {}
         }
       }
     }
@@ -3623,7 +3623,7 @@
       "path": "system.xml.xpath.xmldocument/4.0.1",
       "hashPath": "system.xml.xpath.xmldocument.4.0.1.nupkg.sha512"
     },
-    "ASPNETCore_SignalR_Angular_TypeScript/1.0.0": {
+    "HazardHighway/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

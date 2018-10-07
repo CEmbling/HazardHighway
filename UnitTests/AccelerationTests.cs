@@ -40,24 +40,58 @@ namespace UnitTests
         }
 
         [TestMethod]
-        [DataRow(5, 0, 0, 5 * 3 + 5)]
-        [DataRow(10, 0, 0, 15 * 3 + 5)]
-        [DataRow(15, 0, 0, 26 * 3 + 5)]
-        [DataRow(20, 0, 0, 39 * 3 + 5)]
-        [DataRow(25, 0, 0, 55 * 3 + 5)]
-        [DataRow(30, 0, 0, 74 * 3 + 5)]
-        [DataRow(35, 0, 0, 95 * 3 + 5)]
-        [DataRow(40, 0, 0, 118 * 3 + 5)]
-        [DataRow(45, 0, 0, 144 * 3 + 5)]
-        [DataRow(50, 0, 0, 172 * 3 + 5)]
-        [DataRow(55, 0, 0, 207 * 3 + 5)]
-        [DataRow(60, 0, 0, 239 * 3 + 5)]
-        [DataRow(65, 0, 0, 275 * 3 + 5)]
-        [DataRow(70, 0, 0, 315 * 3 + 5)]
-        [DataRow(75, 0, 0, 356 * 3 + 5)]
-        [DataRow(80, 0, 0, 400 * 3 + 5)]
-        [DataRow(90, 0, 0, 494 * 3 + 5)]
-        [DataRow(95, 0, 0, 545 * 3 + 5)]
+        [DataRow(5, 0, 0, 4 + 15 + 2 * 2)]      // 4(car offset) + 5 mph safe Accel. + cellsPerInstance*2 instances
+        [DataRow(10, 0, 0, 4 + 26 + 4 * 2)]     // 4(car offset) + 10 mph safe Accel. + cellsPerInstance*2 instances
+        //[DataRow(10, 0, 0, 15 * 3 + 5)]
+        //[DataRow(15, 0, 0, 26 * 3 + 5)]
+        //[DataRow(20, 0, 0, 39 * 3 + 5)]
+        //[DataRow(25, 0, 0, 55 * 3 + 5)]
+        //[DataRow(30, 0, 0, 74 * 3 + 5)]
+        //[DataRow(35, 0, 0, 95 * 3 + 5)]
+        //[DataRow(40, 0, 0, 118 * 3 + 5)]
+        //[DataRow(45, 0, 0, 144 * 3 + 5)]
+        //[DataRow(50, 0, 0, 172 * 3 + 5)]
+        //[DataRow(55, 0, 0, 207 * 3 + 5)]
+        //[DataRow(60, 0, 0, 239 * 3 + 5)]
+        //[DataRow(65, 0, 0, 275 * 3 + 5)]
+        //[DataRow(70, 0, 0, 315 * 3 + 5)]
+        //[DataRow(75, 0, 0, 356 * 3 + 5)]
+        //[DataRow(80, 0, 0, 400 * 3 + 5)]
+        //[DataRow(90, 0, 0, 494 * 3 + 5)]
+        //[DataRow(95, 0, 0, 545 * 3 + 5)]
+        public void AccelerationTest_When_Host_Approaching_Stopped_Lead_Without_Ample_Distance_Host_Should_NOT_Accelerate(int hostMph, int hostX, int leadCarMph, int leadCarX)
+        {
+            double updateIntervalTotalMilliseconds = 250;
+            Constants constants = new Constants();
+            var SUT = Vehicle.Factory.Create("host car", hostMph, hostX, 1, true, drivingStatus: DrivingStatus.Driving);
+            var lead = Vehicle.Factory.Create("lead car", leadCarMph, leadCarX, 1, true, drivingStatus: DrivingStatus.Driving);
+            SUT.AddAdaptiveCruiseMph(constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE);
+
+            var accelerate = SUT.CalculateVehicleAccelerationForceToMaintainLeadPreference(lead, updateIntervalTotalMilliseconds);
+
+            Assert.AreEqual(0, accelerate);
+        }
+
+        [TestMethod]
+        [DataRow(5, 0, 0, 19 + 2*2 + 1)]    // 5 mph safe Acce. + cellsPerInstance*2 instances + 1 cell
+        [DataRow(10, 0, 0, 34 + 4*2 + 1)]
+        //[DataRow(15, 0, 0, 51)]
+        //[DataRow(20, 0, 0, 71)]
+        //[DataRow(25, 0, 0, 94)]
+        //[DataRow(30, 0, 0, 117)]
+        //[DataRow(35, 0, 0, 144)]
+        //[DataRow(40, 0, 0, 174)]
+        //[DataRow(45, 0, 0, 206)]
+        //[DataRow(50, 0, 0, 245)]
+        //[DataRow(55, 0, 0, 281)]
+        //[DataRow(60, 0, 0, 319)]
+        //[DataRow(65, 0, 0, 363)]
+        //[DataRow(70, 0, 0, 408)]
+        //[DataRow(75, 0, 0, 456)]
+        //[DataRow(80, 0, 0, 506)]
+        //[DataRow(85, 0, 0, 558)]
+        //[DataRow(90, 0, 0, 611)]
+        //[DataRow(95, 0, 0, 668)]
         public void AccelerationTest_When_Host_Approaching_Stopped_Lead_With_Ample_Distance_Host_Should_Accelerate(int hostMph, int hostX, int leadCarMph, int leadCarX)
         {
             double updateIntervalTotalMilliseconds = 250;

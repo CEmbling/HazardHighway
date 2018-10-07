@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.27130.2024
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3E896075-BEB1-4534-ABC2-DE81E6A6FCD8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ASPNETCore_SignalR_Angular_TypeScript", "ASPNETCore-SignalR-Angular-TypeScript\ASPNETCore_SignalR_Angular_TypeScript.csproj", "{716372C1-7226-44CD-B98E-90681BAA3CA8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HazardHighway", "HazardHighway\HazardHighway.csproj", "{716372C1-7226-44CD-B98E-90681BAA3CA8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{F3C6F4BB-6C0A-4C39-AA15-62AC497AC470}"
 EndProject
