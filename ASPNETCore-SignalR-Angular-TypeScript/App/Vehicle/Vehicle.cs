@@ -111,8 +111,22 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             return cellsTravelledPerInterval;
         }
 
+
+        public void IncrementPositionChange(double intervalTotalMilliseconds)
+        {
+            if (this.DrivingStatus == ASPNETCore_SignalR_Angular_TypeScript.App.DrivingStatus.Crashed.ToString())
+            {
+                return;
+            }
+            int cellsTravelledPerInterval = this.CalculateCellsTravelledPerInterval(intervalTotalMilliseconds);
+            this.X += cellsTravelledPerInterval;
+        }
         public void AddMph(int accelerationMph, bool isHumanInitiating)
         {
+            if(accelerationMph == 0)
+            {
+                return;
+            }
             if (this.Mph + accelerationMph > this._constants.VEHICLE_MPH_MAX_ACCELERATION)
             {
                 return;
@@ -155,6 +169,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             this.Mph -= brakeMph;
         }
 
+
         public VehicleModel ToModel()
         {
             return new VehicleModel
@@ -175,19 +190,9 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             };
         }
 
-        public void IncrementPositionChange(double intervalTotalMilliseconds)
-        {
-            if (this.DrivingStatus == ASPNETCore_SignalR_Angular_TypeScript.App.DrivingStatus.Crashed.ToString())
-            {
-                return;
-            }
-            int cellsTravelledPerInterval = this.CalculateCellsTravelledPerInterval(intervalTotalMilliseconds);
-            this.X += cellsTravelledPerInterval;
-        }
-
         public static class Factory
         {
-            public static Vehicle Create(string name, int mph, int x, int y, bool adaptiveCruiseOn, bool isHazard = false)
+            public static Vehicle Create(string name, int mph, int x, int y, bool adaptiveCruiseOn, DrivingStatus drivingStatus = App.DrivingStatus.Driving, bool isHazard = false)
             {
                 Constants constants = new Constants();
                 return new Vehicle(constants, new CruiseAlgorithm(constants))
@@ -198,7 +203,8 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
                     Y = y,
                     AdaptiveCruiseOn = adaptiveCruiseOn,
                     AdaptiveCruiseDesiredMph = adaptiveCruiseOn? mph : 0,
-                    IsHazard = isHazard
+                    IsHazard = isHazard,
+                    DrivingStatus = mph == 0? App.DrivingStatus.Stopped.ToString(): drivingStatus.ToString()
                 };
             }
         }

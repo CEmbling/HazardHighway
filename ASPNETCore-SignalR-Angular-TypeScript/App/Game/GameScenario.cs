@@ -33,12 +33,12 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
                         break;
                     case GameLevel.Level3:
                         vehicles = VehicleFactory.GetVehiclesForTestingStopping(constants, terms);
-                        scenario.EndX = 5000;
+                        scenario.EndX = 1004;
                         break;
                     case GameLevel.Level4:
                         vehicles = VehicleFactory.GetVehiclesForTestingStopping(constants, terms);
                         vehicles.ForEach(vehicle => vehicle.AddMph(vehicle.Mph > 0 ? 25 : 0, true));
-                        scenario.EndX = 5000;
+                        scenario.EndX = 1004;
                         break;
                 }
                 

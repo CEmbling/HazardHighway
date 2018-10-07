@@ -97,23 +97,37 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             {
                 return 0;
             }
-            var isHostGoingDesiredMph = host.AdaptiveCruiseDesiredMph == host.Mph || host.AdaptiveCruiseDesiredMph == 0;
-            if (isHostGoingDesiredMph)
+            if (host.IsGoingDesiredMph)
             {
                 return 0;
             }
             // from here down, host desires to go faster than current mph
 
+            // predict where host & lead will be next interval, if it's too close, brake this interval
+            // drivers prefer: 
+            //      slow approach to match speed and safe tailing distance vs.
+            //      quick approach, but too close, braking and then accelerating to match speed and safe tailing distance
+            var cellDistancePredictedNextInterval = lead.RearBumper + lead.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds) - (host.FrontBumper + host.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds));
+
             var cellClosurePerInterval = Math.Abs(lead.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds) - host.CalculateCellsTravelledPerInterval(updateIntervalTotalMilliseconds));
-            var cellDistance = lead.RearBumper - host.FrontBumper;
+            
             var hostSpeedDifferenceFromLead = lead.Mph - host.Mph;
 
             if (lead.Mph == 0)
             {
                 // lead is stopped; host is approaching
-                var safeStoppingDistance = this._constants.safeStoppingCellDistances[host.Mph];
-                //if (cellDistance > (safeStoppingDistance * (safeDistanceMultiplier + Math.Abs(hostSpeedDifferenceFromLead))))
-                if (cellDistance > safeStoppingDistance)
+                // predict whether increasing mph is host still within safe stopping distance
+                var predictSafeStoppingCellDistance = this._constants.safeStoppingCellDistances[host.Mph + _constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE];
+                if (cellDistancePredictedNextInterval > predictSafeStoppingCellDistance)
+                {
+                    return _constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE;
+                }
+            }
+            else if (lead.Mph == host.Mph)
+            {
+                // host is tailing lead; can host speed up and still maintain safe tailing distance?
+                var predictSafeTailingCellDistance = this._constants.safeTailingCellDistances[host.Mph + _constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE];
+                if (cellDistancePredictedNextInterval > predictSafeTailingCellDistance)
                 {
                     return _constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE;
                 }
@@ -121,21 +135,11 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             else
             {
                 // host is approaching moving lead
-                var safeTailingCellDistance = this._constants.safeTailingCellDistances[Math.Abs(host.Mph)];
-                
-                if (cellDistance > (safeTailingCellDistance * (Math.Abs(hostSpeedDifferenceFromLead == 0? 1: hostSpeedDifferenceFromLead/_constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE))))
+                // add mph to host to predict if car would still be in safe tailing distance from lead
+                var predictSafeTailingCellDistance = this.CalculateSafeTailingCellDistanceFromLead(lead.Mph, host.Mph + _constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE);
+                if (cellDistancePredictedNextInterval > predictSafeTailingCellDistance)
                 {
-                    // predict if adding acceleration, will host still be within safe tailing distance?
-                    // why do this? this prevents quick acceleration/braking scenarios
-                    var predictedSafeTailingDistance = this._constants.safeTailingCellDistances[Math.Abs(host.Mph + _constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE)];
-                    var predictedHostSpeedDifferenceFromLead = host.Mph + _constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE - lead.Mph;
-                    if (cellDistance >= (predictedSafeTailingDistance * (Math.Abs(predictedHostSpeedDifferenceFromLead == 0 ? 1 : predictedHostSpeedDifferenceFromLead / _constants.VEHICLE_GRADUAL_MPH_BRAKE_RATE))))
-                    {
-                        return _constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE;
-                    }
-
-                    //var safeAccelerationCellDistance = this._constants.safeAccelerationCellDistances[Math.Abs(host.Mph)];
-
+                    return _constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE;
                 }
             }
             return 0;

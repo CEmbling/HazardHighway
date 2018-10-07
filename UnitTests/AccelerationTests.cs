@@ -32,9 +32,9 @@ namespace UnitTests
         {
             double updateIntervalTotalMilliseconds = 250;
             Constants constants = new Constants();
-            var SUT = Vehicle.Factory.Create("host car", hostMph, hostX, 1, adaptiveCruiseOn: true);
+            var SUT = Vehicle.Factory.Create("host car", hostMph, hostX, 1, adaptiveCruiseOn: true, drivingStatus:DrivingStatus.Driving);
             SUT.AddAdaptiveCruiseMph(constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE);
-            var lead = Vehicle.Factory.Create("lead car", leadCarMph, leadCarX, 1, true);
+            var lead = Vehicle.Factory.Create("lead car", leadCarMph, leadCarX, 1, true, drivingStatus: DrivingStatus.Driving);
             var accelerate = SUT.CalculateVehicleAccelerationForceToMaintainLeadPreference(lead, updateIntervalTotalMilliseconds);
             Assert.AreEqual(5, accelerate);
         }
@@ -62,8 +62,8 @@ namespace UnitTests
         {
             double updateIntervalTotalMilliseconds = 250;
             Constants constants = new Constants();
-            var SUT = Vehicle.Factory.Create("host car", hostMph, hostX, 1, true);
-            var lead = Vehicle.Factory.Create("lead car", leadCarMph, leadCarX, 1, true);
+            var SUT = Vehicle.Factory.Create("host car", hostMph, hostX, 1, true, drivingStatus: DrivingStatus.Driving);
+            var lead = Vehicle.Factory.Create("lead car", leadCarMph, leadCarX, 1, true, drivingStatus: DrivingStatus.Driving);
             SUT.AddAdaptiveCruiseMph(constants.VEHICLE_MPH_ACCELERATION_INCREMENT_RATE);
 
             var accelerate = SUT.CalculateVehicleAccelerationForceToMaintainLeadPreference(lead, updateIntervalTotalMilliseconds);

@@ -332,10 +332,6 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                 _VehicleActionsLock.Release();
             }
         }
-        private async Task AddVehicleAction()
-        {
-
-        }
 
         #endregion
 
@@ -452,13 +448,17 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                     break;
                 case VehicleAction.ToggleAdaptiveCruise:
                     host.AdaptiveCruiseOn = !host.AdaptiveCruiseOn;
-                    if (host.AdaptiveCruiseOn)
+                    if(host.Mph == 0)
+                    {
+                        host.AdaptiveCruiseDesiredMph = 0;
+                    }
+                    else if (host.AdaptiveCruiseOn && host.Mph > 0)
                     {
                         TryUpdateVehicleDrivingStatus(host, DrivingStatus.Cruising);
                         // keep AdaptiveCruiseMph insync w/ human initiated events, like enabled AC
                         host.AdaptiveCruiseDesiredMph = host.Mph;
                     }
-                    else
+                    else if (!host.AdaptiveCruiseOn && host.Mph > 0)
                     {
                         TryUpdateVehicleDrivingStatus(host, DrivingStatus.Driving);
                         host.AdaptiveCruiseDesiredMph = 0;
@@ -758,7 +758,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript
                     // accelerating to desired speed
                     await this.AddVehicleActionToQueue(host.Name, VehicleAction.IncreaseSpeed_CruiseInitiated, "");
                 }
-                else if (host.IsGoingDesiredMph)
+                else if (host.IsGoingDesiredMph && host.Mph > 0)
                 {
                     // vehicle returned to normal cruise speed
                     if (host.DrivingStatus != DrivingStatus.Cruising.ToString())

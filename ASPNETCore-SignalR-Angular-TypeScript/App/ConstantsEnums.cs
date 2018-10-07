@@ -21,10 +21,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
         // braking
         public int RADARBRAKERANGE { get => 8; } // will be multipled by vehicle's cellsTraveledPerInterval value
         public int POINTSPERVEHICLESAVED { get => 1000; }
-        public int DANGEROUSESPEEDDIFF { get => 50; }
-        public int CAUTIONSPEEDDIFF { get => 35; }
-        public int VEHICLE_MAX_MPH_BRAKE_RATE { get => 15; }
-        public int VEHICLE_CAUTIOUS_MPH_BRAKE_RATE { get => 10; }
+       
         public int VEHICLE_GRADUAL_MPH_BRAKE_RATE { get => 5; }
         // saving
         public int RADARINDICATORRANGETOSAVE = 8;
