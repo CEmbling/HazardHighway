@@ -11,17 +11,19 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.Models
     {
         public string Name { get; set; }
         public VehicleAction VehicleAction { get; set; } 
+        public string leadVehicleName { get; set; }
         public bool Handled { get; set; }
 
         public static class Factory
         {
-            public static QueuedVehicleAction Create(string name, VehicleAction vehicleAction)
+            public static QueuedVehicleAction Create(string name, VehicleAction vehicleAction, string leadVehicleName)
             {
                 return new QueuedVehicleAction()
                 {
                     Name = name,
                     VehicleAction = vehicleAction,
-                    Handled = false
+                    Handled = false,
+                    leadVehicleName = leadVehicleName
                 };
             }
         }

@@ -30,7 +30,7 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
         public int RADARINDICATORRANGETOSAVE = 8;
         public Dictionary<int, int> safeStoppingCellDistances = new Dictionary<int, int>()
         {
-            {0, 3},
+            {0, 5},
             {5, 5},
             {10, 15},
             {15, 26},
@@ -54,8 +54,8 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
         };
         public Dictionary<int, int> safeTailingCellDistances = new Dictionary<int, int>()
         {
-            {0, 4},
-            {5, 4},
+            {0, 3},
+            {5, 5},
             {10, 8},
             {15, 12},
             {20, 16},
@@ -76,6 +76,30 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
             {95, 76},
             {100, 80}
         };
+        public Dictionary<int, int> safeAccelerationCellDistances = new Dictionary<int, int>()
+        {
+            {0, 5},
+            {5, 8},
+            {10, 12},
+            {15, 16},
+            {20, 20},
+            {25, 24},
+            {30, 28},
+            {35, 32},
+            {40, 36},
+            {45, 40},
+            {50, 44},
+            {55, 48},
+            {60, 52},
+            {65, 56},
+            {70, 60},
+            {75, 64},
+            {80, 68},
+            {85, 72},
+            {90, 76},
+            {95, 80},
+            {100, 100}
+        };
     }
     public enum GameState
     {
@@ -93,9 +117,11 @@ namespace ASPNETCore_SignalR_Angular_TypeScript.App
     {
         TurnLeft,
         TurnRight,
-        IncreaseSpeed,
-        DecreaseSpeed,
-        ToggleAdaptiveCruise
+        ToggleAdaptiveCruise,
+        IncreaseSpeed_UserInitiated,
+        DecreaseSpeed_UserInitiated,
+        IncreaseSpeed_CruiseInitiated,
+        DecreaseSpeed_CruiseInitiated
     }
     public enum DrivingStatus
     {
